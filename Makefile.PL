@@ -5,29 +5,20 @@ use File::ShareDir::Install;
 install_share 'share';
 
 WriteMakefile(
-  NAME             => 'App::jupiter',
-  VERSION_FROM     => 'lib/App/jupiter.pm',
-  ABSTRACT_FROM    => 'lib/App/jupiter.pm',
+  NAME             => 'Game::TextMapper',
+  VERSION_FROM     => 'lib/Game/TextMapper.pm',
+  ABSTRACT_FROM    => 'lib/Game/TextMapper.pm',
   AUTHOR           => 'Alex Schroeder',
   LICENSE          => 'agpl_3',
   MIN_PERL_VERSION => '5.26.0', # Modern::Perl '2018'
   EXE_FILES        => [
-    'script/jupiter',
+    'script/text-mapper',
   ],
   PREREQ_PM => {
     'strict' => 0,
     'warnings' => 0,
     'Modern::Perl' => 1.20180701, # for '2018'
     'Mojolicious' => 0, # for Mojo::Template and Mojo::UserAgent
-    'Mojo::UserAgent::Role::Queued' => 0,
-    'XML::LibXML' => 0,
-    'File::Slurper' => 0,
-    'File::ShareDir' => 0,
-    'Mojo::JSON' => 0,
-    'Encode::Locale' => 0,
-    'DateTime' => 0,
-    'DateTime::Format::Mail' => 0,
-    'DateTime::Format::ISO8601' => 0,
   },
   CONFIGURE_REQUIRES => {
     'ExtUtils::MakeMaker' => '6.52',
@@ -38,8 +29,8 @@ WriteMakefile(
     resources => {
       repository => {
 	type => 'git',
-	url  => 'https://alexschroeder.ch/cgit/planet-jupiter',
-	web  => 'https://alexschroeder.ch/cgit/planet-jupiter/about/',
+	url  => 'https://alexschroeder.ch/cgit/text-mapper',
+	web  => 'https://alexschroeder.ch/cgit/text-mapper/about/',
       },
     },
   },
@@ -55,9 +46,10 @@ sub postamble {
   my $self = shift;
   my @ret = File::ShareDir::Install::postamble($self);
   push @ret, <<'EOT';
-README.md: script/jupiter
-	pod2markdown $< $@
-	grep -L ERROR $@
+# Assuming you want to run Hex Describe on port 3000 and Face Generator on port
+# 3020, start Text Mapper on port 3010.
+run:
+	morbo --mode development --listen http://*:3010 script/text-mapper
 EOT
   return join "\n", @ret;
 }
