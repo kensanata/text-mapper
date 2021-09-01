@@ -5,10 +5,12 @@ SVG output.
 
 Example input:
 
-    0101 empty
-    0102 mountain
-    0103 hill "bone hills"
-    0104 forest
+```text
+0101 empty
+0102 mountain
+0103 hill "bone hills"
+0104 forest
+```
 
 [Try it](https://campaignwiki.org/text-mapper).
 
