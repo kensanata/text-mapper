@@ -24,7 +24,7 @@ Perl Modules (or Debian modules):
 * List::MoreUtils or liblist-moreutils-perl
 * Modern::Perl or libmodern-perl-perl
 * Mojolicious or libmojolicious-perl
-* Role::Tiny::With
+* Role::Tiny::With or librole-tiny-perl
 
 The IO::Socket::SSL dependency means that you’ll need OpenSSL
 development libraries installed as well: openssl-devel or equivalent,
