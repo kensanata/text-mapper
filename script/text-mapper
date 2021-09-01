@@ -4481,6 +4481,7 @@ use Pod::Simple::HTML;
 use Pod::Simple::Text;
 use List::Util qw(none);
 use File::ShareDir 'dist_dir';
+use Cwd;
 
 # Change scheme if "X-Forwarded-Proto" header is set (presumably to HTTPS)
 app->hook(before_dispatch => sub {
@@ -4488,10 +4489,14 @@ app->hook(before_dispatch => sub {
   $c->req->url->base->scheme('https')
       if $c->req->headers->header('X-Forwarded-Proto') } );
 
-plugin Config => {default => {
-  loglevel => 'warn',
-  logfile => undef,
-  contrib => undef, }};
+plugin Config => {
+  default => {
+    loglevel => 'warn',
+    logfile => undef,
+    contrib => undef,
+  },
+  file => getcwd() . '/text-mapper.conf',
+};
 
 $log = Mojo::Log->new;
 $log->level(app->config('loglevel'));
@@ -5683,10 +5688,9 @@ use this option if you want those empty hexes added…
 
 =head2 Configuration
 
-As a Mojolicious application, it will read a config file called
-F<text-mapper.conf> in the same directory, if it exists. As the default log
-level is 'warn', one use of the config file is to change the log level using
-the C<loglevel> key.
+The application will read a config file called F<text-mapper.conf> in the
+current directory, if it exists. As the default log level is 'warn', one use of
+the config file is to change the log level using the C<loglevel> key.
 
 The libraries are loaded from the F<contrib> URL. You can change the default
 using the C<contrib> key. This is necessary when you want to develop locally,
@@ -5694,7 +5698,7 @@ for example.
 
     {
       loglevel => 'debug',
-      contrib => 'file://contrib',
+      contrib => 'contrib',
     };
 
 =head2 Command Line
