@@ -35,7 +35,7 @@ dependencies) use cpan or cpanm.
 
 Example:
 
-```
+```bash
 cpanm .
 ```
 
