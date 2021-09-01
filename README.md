@@ -44,7 +44,7 @@ cpanm .
 Use cpan or cpanm to install Game::TextMapper. In the directory you
 want to run it from, create a config file like the following:
 
-```
+```perl
 {
   # choose error, warn, info, or debug
   loglevel => 'warn',
@@ -59,12 +59,12 @@ want to run it from, create a config file like the following:
 As a developer, morbo makes sure to restart it whenever a file
 changes:
 
-```
+```bash
 morbo --mode development --listen "http://*:3010" script/text-mapper
 ```
 
 Alternatively:
 
-```
+```bash
 script/text-mapper daemon --mode development --listen "http://*:3010"
 ```
