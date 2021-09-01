@@ -47,12 +47,13 @@ want to run it from, create a config file like the following:
 ```perl
 {
   # choose error, warn, info, or debug
-  loglevel => 'warn',
+  loglevel => 'debug',
   # use stderr, alternatively use a filename
   logfile => undef,
   # the URL where the contributions for include statements are
-  # e.g. 'https://campaignwiki.org/contrib'
-  contrib => 'file:///home/alex/src/text-mapper/share',
+  # e.g. 'https://campaignwiki.org/contrib' (only HTTP and HTTPS
+  # schema allowed), or a local directory
+  contrib => '/home/alex/src/text-mapper/share',
 }
 ```
 

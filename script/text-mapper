@@ -486,6 +486,8 @@ package Mapper;
 use Modern::Perl '2018';
 use LWP::UserAgent;
 use Mojo::Base -base;
+use File::Slurper qw(read_text);
+use Encode qw(decode_utf8);
 
 has 'map';
 has 'regions' => sub { [] };
@@ -603,13 +605,19 @@ sub process {
 	push(@{$self->messages},
 	     "Includes are limited to five to prevent loops");
       } elsif (not $self->seen->{$1}) {
-	$self->seen->{$1} = 1;
-	my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 1 });
-	my $response = $ua->get($1);
-	if ($response->is_success) {
-	  $self->process(split(/\n/, $response->decoded_content));
+	my $location = $1;
+	$self->seen->{$location} = 1;
+	if (-f $location and substr($location, 0, length($contrib)) eq $contrib) {
+	  $self->process(split(/\n/, decode_utf8 read_text $location));
 	} else {
-	  push(@{$self->messages}, $response->status_line);
+	  my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 1 });
+	  $ua->protocols_allowed(['http', 'https']);
+	  my $response = $ua->get($location);
+	  if ($response->is_success) {
+	    $self->process(split(/\n/, $response->decoded_content));
+	  } else {
+	    push(@{$self->messages}, $response->status_line);
+	  }
 	}
       }
     } else {
@@ -4472,6 +4480,7 @@ use Mojo::Util qw(url_escape xml_escape);
 use Pod::Simple::HTML;
 use Pod::Simple::Text;
 use List::Util qw(none);
+use File::ShareDir 'dist_dir';
 
 # Change scheme if "X-Forwarded-Proto" header is set (presumably to HTTPS)
 app->hook(before_dispatch => sub {
@@ -4482,14 +4491,14 @@ app->hook(before_dispatch => sub {
 plugin Config => {default => {
   loglevel => 'warn',
   logfile => undef,
-  contrib => 'https://campaignwiki.org/contrib', }};
+  contrib => undef, }};
 
 $log = Mojo::Log->new;
 $log->level(app->config('loglevel'));
 $log->path(app->config('logfile'));
 
 $debug = $log->level eq 'debug';
-$contrib = app->config('contrib');
+$contrib = app->config('contrib') // dist_dir('Game-TextMapper');
 
 get '/' => sub {
   my $c = shift;
