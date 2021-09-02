@@ -96,7 +96,6 @@ sub partway {
 
 sub svg {
   my ($self, $offset) = @_;
-  $log->debug($self);
   my ($path, $current, $next, $closed);
   $self->offset($offset);
   my @points = $self->compute_missing_points();
@@ -608,12 +607,14 @@ sub process {
 	my $location = $1;
 	$self->seen->{$location} = 1;
 	if (-f $location and substr($location, 0, length($contrib)) eq $contrib) {
-	  $self->process(split(/\n/, decode_utf8 read_text $location));
+	  $log->debug("Reading $location");
+	  $self->process(split(/\n/, read_text($location)));
 	} else {
+	  $log->debug("Getting $location");
 	  my $ua = Mojo::UserAgent->new;
-	  my $response = $ua->get($location);
+	  my $response = $ua->get($location)->result;
 	  if ($response->is_success) {
-	    $self->process(split(/\n/, $response->decoded_content));
+	    $self->process(split(/\n/, $response->text));
 	  } else {
 	    push(@{$self->messages}, $response->status_line);
 	  }
@@ -2381,7 +2382,6 @@ sub generate {
   my $i = 1;
   while (@code) {
     shift(@code)->();
-    $log->debug($step);
     return if $step == $i++;
   }
 }
@@ -3892,7 +3892,6 @@ sub to_gridmapper_link {
   }
   $log->debug("Gridmapper: $code");
   my $url = 'https://campaignwiki.org/gridmapper?' . url_escape($code);
-  $log->debug($url);
   return $url;
 }
 
@@ -4419,7 +4418,7 @@ sub to_text {
       }
     }
   }
-  $text .= join("\n", @$comms, "include $contrib/traveller.txt\n");
+  $text .= join("\n", @$comms, "\ninclude $contrib/traveller.txt\n");
   return $text;
 }
 
@@ -4500,9 +4499,11 @@ plugin Config => {
 $log = Mojo::Log->new;
 $log->level(app->config('loglevel'));
 $log->path(app->config('logfile'));
+$log->info($log->path ? "Logfile is " . $log->path : "Logging to stderr");
 
 $debug = $log->level eq 'debug';
 $contrib = app->config('contrib') // dist_dir('Game-TextMapper');
+$log->debug("Reading contrib files from $contrib");
 
 get '/' => sub {
   my $c = shift;
