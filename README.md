@@ -61,8 +61,8 @@ make install
 
 ## Configuration
 
-In the directory you want to run it from, create a config file named
-`text-mapper.conf` like the following:
+In the directory you want to run it from, you may create a config file
+named `text-mapper.conf` like the following:
 
 ```perl
 {
