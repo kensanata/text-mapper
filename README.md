@@ -101,7 +101,7 @@ image:
 
 ```bash
 sudo apt install docker.io
-sudo adduser alex docker
+sudo adduser $(whoami) docker
 # if groups doesn’t show docker, you need to log in again
 su - $(whoami)
 # this binds the working directory to /app inside the image
