@@ -1,5 +1,5 @@
 # This file is for use with text-mapper.
-# https://github.com/kensanata/hex-mapping
+# https://alexschroeder.ch/cgit/text-mapper/about/
 
 default attributes fill="none" stroke="black" stroke-width="3"
 

@@ -503,7 +503,7 @@
 <text font-size="14pt" x="0" y="0" transform="translate(10,1850) rotate(-90) " font-family="Optima, Helvetica, sans-serif">◉ gas giant – ■ imperial consulate – ☼ TAS – ▲ scout base – ★ navy base – π research base – ☠ pirate base – <tspan fill="#ff6347">▮</tspan> communication – <tspan fill="#afeeee">▮</tspan> trade</text>
 <!-- Source
 # This file is for use with text-mapper.
-# https://github.com/kensanata/hex-mapping
+# https://alexschroeder.ch/cgit/text-mapper/about/
 
 default attributes fill="none" stroke="black" stroke-width="3"
 
@@ -556,7 +556,7 @@ other <text font-size="24pt" x="0" y="0" transform="translate(1490,900) rotate(9
 other <text font-size="14pt" x="0" y="0" transform="translate(10,1850) rotate(-90) " font-family="Optima, Helvetica, sans-serif">◉ gas giant – ■ imperial consulate – ☼ TAS – ▲ scout base – ★ navy base – π research base – ☠ pirate base – <tspan fill="#ff6347">▮</tspan> communication – <tspan fill="#afeeee">▮</tspan> trade</text>
 
 # This file is for use with text-mapper.
-# https://github.com/kensanata/hex-mapping
+# https://alexschroeder.ch/cgit/text-mapper/about/
 
 0101 D 7 gas amber "Inedgeus"
 0102 E 6 gas amber "GEAAN"

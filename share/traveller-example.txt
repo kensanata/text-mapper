@@ -1,5 +1,5 @@
 # This file is for use with text-mapper.
-# https://github.com/kensanata/hex-mapping
+# https://alexschroeder.ch/cgit/text-mapper/about/
 
 0101 starport-D size-7 gas amber "Inedgeus"
 0102 starport-E size-6 gas amber "GEAAN"
