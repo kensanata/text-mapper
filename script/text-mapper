@@ -484,7 +484,7 @@ sub svg_label {
 package Mapper;
 
 use Modern::Perl '2018';
-use LWP::UserAgent;
+use Mojo::UserAgent;
 use Mojo::Base -base;
 use File::Slurper qw(read_text);
 use Encode qw(decode_utf8);
@@ -610,8 +610,7 @@ sub process {
 	if (-f $location and substr($location, 0, length($contrib)) eq $contrib) {
 	  $self->process(split(/\n/, decode_utf8 read_text $location));
 	} else {
-	  my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 1 });
-	  $ua->protocols_allowed(['http', 'https']);
+	  my $ua = Mojo::UserAgent->new;
 	  my $response = $ua->get($location);
 	  if ($response->is_success) {
 	    $self->process(split(/\n/, $response->decoded_content));

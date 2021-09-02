@@ -19,6 +19,10 @@ WriteMakefile(
     'warnings' => 0,
     'Modern::Perl' => 1.20180701, # for '2018'
     'Mojolicious' => 0, # for Mojo::Template and Mojo::UserAgent
+    'File::Slurper' => 0,
+    'Role::Tiny' => 0,
+    'List::MoreUtils' => 0,
+    'File::ShareDir' => 0,
   },
   CONFIGURE_REQUIRES => {
     'ExtUtils::MakeMaker' => '6.52',
