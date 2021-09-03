@@ -1,6 +1,5 @@
-#!/usr/bin/env perl
 # Copyright (C) 2021  Alex Schroeder <alex@gnu.org>
-#
+
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option) any
@@ -12,27 +11,18 @@
 # details.
 #
 # You should have received a copy of the GNU Affero General Public License along
-# with this program. If not, see <http://www.gnu.org/licenses/>.
-
-=head1 NAME
-
-text-mapper - a web app to generate maps based on text files
-
-=head1 DESCRIPTION
-
-This command starts a web server using Mojolicious.
-
-=head1 SEE ALSO
-
-For more information, see <Game::TextMapper>.
-
-=head1 LICENSE
-
-GNU Affero General Public License
-
-=cut
+# with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use Modern::Perl;
-use Mojo::Home;
-my $home = Mojo::Home->new;
-do $home->detect('Game::TextMapper')->child('lib/Game/TextMapper.pm');
+use Test::More;
+use Test::Mojo;
+use utf8;
+
+my $t = Test::Mojo->new('Game::TextMapper');
+
+$t->get_ok('/')
+    ->status_is(200)
+    ->text_is('h1' => 'Text Mapper')
+    ->text_like('textarea[name=map]' => qr/^0101 mountain "mountain"$/m);
+
+done_testing;
