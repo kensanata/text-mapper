@@ -3705,8 +3705,6 @@ sub to_rocks {
 	  } @dirs;
 	  if (list_equal($expected, \@actual)) {
 	    $_ = $rock;
-	    # $_ = $first ? "pillar" : $rock; $first = 0;
-	    $log->warn("(" . $self->coordinates($here) . ") $_: @$expected vs @actual");
 	    next TILE;
 	  }
         }
@@ -3989,7 +3987,7 @@ sub grow_river {
     push(@$river, $next);
     $log->debug(" " . $self->xy($river));
     if ($rivers->[$next]) {
-      $log->warn(" merge!");
+      $log->debug(" merge!");
       my @other = @{$rivers->[$next]};
       while ($other[0] != $next) { shift @other };
       shift @other; # get rid of the duplicate $next
