@@ -38,9 +38,6 @@ WriteMakefile(
       },
     },
   },
-  clean => {
-    FILES => "test-[0-9][0-9][0-9][0-9]",
-  },
 );
 
 package MY;
