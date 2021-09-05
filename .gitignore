@@ -1,6 +1,7 @@
 *~
 *.bak
 *.conf
+*.tar.gz
 .prove
 blib
 MYMETA*
