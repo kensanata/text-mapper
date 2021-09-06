@@ -5299,9 +5299,11 @@ Thanks to Eric Scheid for showing me this trick.
 
 =head2 Include a Library
 
-Since these definitions get unwieldy, require a lot of work (the path
-elements), and to encourage reuse, you can use the B<include>
-statement with an URL or a filename (in which case these files must be in
+Since these definitions get unwieldy, require a lot of work (the path elements),
+and to encourage reuse, you can use the B<include> statement with an URL or a
+filename. If a filename, the file must be in the directory named by the
+F<contrib> configuration key, which defaults to the applications F<share>
+directory.
 
     include $contrib/default.txt
     0102 sand
@@ -5312,9 +5314,6 @@ statement with an URL or a filename (in which case these files must be in
     0302 sand
     0303 sand
 
-You can find more files ("libraries") to include in the C<share>
-directory.
-
 
 =head3 Default library
 
@@ -5322,46 +5321,47 @@ Source of the map:
 L<http://themetalearth.blogspot.ch/2011/03/opd-entry.html>
 
 Example data:
-L<$contrib/forgotten-depths.txt>
+L<https://campaignwiki.org/contrib/forgotten-depths.txt>
 
 Library:
-L<$contrib/default.txt>
+L<https://campaignwiki.org/contrib/default.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?map=include+$contrib/forgotten-depths.txt>
+L<https://campaignwiki.org/text-mapper?map=include+https://campaignwiki.org/contrib/forgotten-depths.txt>
 
 =head3 Gnomeyland library
 
 Example data:
-L<$contrib/gnomeyland-example.txt>
+L<https://campaignwiki.org/contrib/gnomeyland-example.txt>
 
 Library:
-L<$contrib/gnomeyland.txt>
+L<https://campaignwiki.org/contrib/gnomeyland.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?map=include+$contrib/gnomeyland-example.txt>
+L<https://campaignwiki.org/text-mapper?map=include+https://campaignwiki.org/contrib/gnomeyland-example.txt>
 
 =head3 Traveller library
 
 Example:
-L<$contrib/traveller-example.txt>
+L<https://campaignwiki.org/contrib/traveller-example.txt>
 
 Library:
-L<$contrib/traveller.txt>
+L<https://campaignwiki.org/contrib/traveller.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?map=include+$contrib/traveller-example.txt>
+L<https://campaignwiki.org/text-mapper?map=include+https://campaignwiki.org/contrib/traveller-example.txt>
 
 =head3 Dungeons library
 
 Example:
-L<$contrib/gridmapper-example.txt>
+L<https://campaignwiki.org/contrib/gridmapper-example.txt>
 
 Library:
-L<$contrib/gridmapper.txt>
+L<https://campaignwiki.org/contrib/gridmapper.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?type=square&map=include+$contrib/gridmapper-example.txt>
+L<https://campaignwiki.org/text-mapper?type=square&map=include+https://campaignwiki.org/contrib/gridmapper-example.txt>
+
 
 =head2 Large Areas
 
@@ -5702,9 +5702,9 @@ The application will read a config file called F<text-mapper.conf> in the
 current directory, if it exists. As the default log level is 'warn', one use of
 the config file is to change the log level using the C<loglevel> key.
 
-The libraries are loaded from the F<contrib> URL. You can change the default
-using the C<contrib> key. This is necessary when you want to develop locally,
-for example.
+The libraries are loaded from the F<contrib> URL or directory. You can change
+the default using the C<contrib> key. This is necessary when you want to develop
+locally, for example.
 
     {
       loglevel => 'debug',
