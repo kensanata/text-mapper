@@ -5263,7 +5263,7 @@ red), using the predefined SVG colour names (just "red"), RGB values
 
 What we haven't mentioned, however, is the alpha channel: you can always add a
 fourth number that specifies how transparent the colour is. It's tricky, though:
-the colour is black (#000000) then it doesn't matter how transparent it is: a
+if the colour is black (#000000) then it doesn't matter how transparent it is: a
 value of zero doesn't change. But it's different when the colour is white!
 Therefore, we can define an attribute that is simply a semi-transparent white
 and use it to lighten things up. You can even use it multiple times!
