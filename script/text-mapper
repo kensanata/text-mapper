@@ -24,7 +24,7 @@ This command starts a web server using Mojolicious.
 
 =head1 SEE ALSO
 
-For more information, see <Game::TextMapper>.
+For more information, see L<Game::TextMapper>.
 
 =head1 LICENSE
 
