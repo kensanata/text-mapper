@@ -609,9 +609,15 @@ sub process {
       } elsif (not $self->seen->{$1}) {
 	my $location = $1;
 	$self->seen->{$location} = 1;
-	if (-f $location and substr($location, 0, length($contrib)) eq $contrib) {
-	  $log->debug("Reading $location");
-	  $self->process(split(/\n/, read_text($location)));
+	if (-f $location) {
+	  my $path = Mojo::File->new($location);
+	  if ($path->dirname eq $contrib) {
+	    $log->debug("Reading $location");
+	    $self->process(split(/\n/, read_text($location)));
+	  } else {
+	    $log->warn("Not reading $location: only $contrib is allowed");
+	    push(@{$self->messages}, "File includes must be from $contrib");
+	  }
 	} else {
 	  $log->debug("Getting $location");
 	  my $ua = Mojo::UserAgent->new;
@@ -5295,7 +5301,7 @@ Thanks to Eric Scheid for showing me this trick.
 
 Since these definitions get unwieldy, require a lot of work (the path
 elements), and to encourage reuse, you can use the B<include>
-statement with an URL.
+statement with an URL or a filename (in which case these files must be in
 
     include $contrib/default.txt
     0102 sand
@@ -5306,9 +5312,8 @@ statement with an URL.
     0302 sand
     0303 sand
 
-You can find more files ("libraries") to include in the C<contrib>
-directory:
-L<https://alexschroeder.ch/cgit/hex-mapping/tree/contrib>.
+You can find more files ("libraries") to include in the C<share>
+directory.
 
 
 =head3 Default library
