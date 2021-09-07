@@ -19,471 +19,13 @@ use Modern::Perl '2018';
 
 our $VERSION = 1.00;
 
-my $dx = 100;
-my $dy = 100*sqrt(3);
-my $debug;
-my $log;
-my $contrib;
-
-package Point;
-
-use Modern::Perl '2018';
-use Mojo::Base -base;
-
-has 'x';
-has 'y';
-has 'z';
-
-sub equal {
-  my ($self, $other) = @_;
-  return $self->x == $other->x && $self->y == $other->y;
-}
-
-sub cmp {
-  my ($a, $b) = @_;
-  return $a->x <=> $b->x || $a->y <=> $b->y;
-}
-
-sub coordinates {
-  my ($self) = @_;
-  return $self->x, $self->y if wantarray;
-  return $self->x . "," . $self->y;
-}
-
-sub coord {
-  my ($x, $y, $separator) = @_;
-  $separator //= "";
-  # print (1,1) as 0101; print (-1,-1) as -01-01
-  return sprintf("%0*d$separator%0*d",
-		 ($x < 0 ? 3 : 2), $x,
-		 ($y < 0 ? 3 : 2), $y);
-}
-
-package Line;
-
-use Modern::Perl '2018';
-use Mojo::Util qw(url_escape);
-use Mojo::Base -base;
-
-has 'id';
-has 'points';
-has 'offset';
-has 'type';
-has 'label';
-has 'map';
-
-sub compute_missing_points {
-  my $self = shift;
-  my $i = 0;
-  my $current = $self->points->[$i++];
-  my $z = $current->z;
-  my @result = ($current);
-  while ($self->points->[$i]) {
-    $current = $self->one_step($current, $self->points->[$i]);
-    return unless $z == $current->z; # must all be on the same plane
-    push(@result, $current);
-    $i++ if $current->equal($self->points->[$i]);
-  }
-
-  return @result;
-}
-
-sub partway {
-  my ($self, $from, $to, $q) = @_;
-  my ($x1, $y1) = $self->pixels($from);
-  my ($x2, $y2) = $self->pixels($to);
-  $q ||= 1;
-  return $x1 + ($x2 - $x1) * $q, $y1 + ($y2 - $y1) * $q if wantarray;
-  return sprintf("%.1f,%.1f", $x1 + ($x2 - $x1) * $q, $y1 + ($y2 - $y1) * $q);
-}
-
-sub svg {
-  my ($self, $offset) = @_;
-  my ($path, $current, $next, $closed);
-  $self->offset($offset);
-  my @points = $self->compute_missing_points();
-  return '' unless @points;
-  if ($points[0]->equal($points[$#points])) {
-    $closed = 1;
-  }
-
-  if ($closed) {
-    for my $i (0 .. $#points - 1) {
-      $current = $points[$i];
-      $next = $points[$i+1];
-      if (!$path) {
-	my $a = $self->partway($current, $next, 0.3);
-	my $b = $self->partway($current, $next, 0.5);
-	my $c = $self->partway($points[$#points-1], $current, 0.7);
-	my $d = $self->partway($points[$#points-1], $current, 0.5);
-	$path = "M$d C$c $a $b";
-      } else {
-	# continue curve
-	my $a = $self->partway($current, $next, 0.3);
-	my $b = $self->partway($current, $next, 0.5);
-	$path .= " S$a $b";
-      }
-    }
-  } else {
-    for my $i (0 .. $#points - 1) {
-      $current = $points[$i];
-      $next = $points[$i+1];
-      if (!$path) {
-	# line from a to b; control point a required for following S commands
-	my $a = $self->partway($current, $next, 0.3);
-	my $b = $self->partway($current, $next, 0.5);
-	$path = "M$a C$b $a $b";
-      } else {
-	# continue curve
-	my $a = $self->partway($current, $next, 0.3);
-	my $b = $self->partway($current, $next, 0.5);
-	$path .= " S$a $b";
-      }
-    }
-    # end with a little stub
-    $path .= " L" . $self->partway($current, $next, 0.7);
-  }
-
-  my $id = $self->id;
-  my $type = $self->type;
-  my $attributes = $self->map->path_attributes->{$type};
-  my $data = qq{    <path id="$id" $attributes d="$path"/>\n};
-  $data .= $self->debug($closed) if $debug;
-  return $data;
-}
-
-sub svg_label {
-  my ($self) = @_;
-  return '' unless defined $self->label;
-  my $id = $self->id;
-  my $label = $self->label;
-  my $attributes = $self->map->label_attributes || "";
-  my $glow = $self->map->glow_attributes || "";
-  my $url = $self->map->url;
-  $url =~ s/\%s/url_escape($self->label)/e or $url .= url_escape($self->label) if $url;
-  # default is left, but if the line goes from right to left, then "left" means "upside down"
-  my $side = '';
-  if ($self->points->[1]->x < $self->points->[0]->x
-      or $#{$self->points} >= 2 and $self->points->[2]->x < $self->points->[0]->x) {
-    $side = ' side="right"';
-  }
-  my $data = qq{    <g>\n};
-  $data .= qq{      <text $attributes $glow><textPath$side href='#$id'>$label</textPath></text>\n} if $glow;
-  $data .= qq{      <a xlink:href="$url">} if $url;
-  $data .= qq{      <text $attributes><textPath href='#$id'>$label</textPath></text>\n};
-  $data .= qq{      </a>} if $url;
-  $data .= qq{    </g>\n};
-  return $data;
-}
-
-sub debug {
-  my ($self, $closed) = @_;
-  my ($data, $current, $next);
-  my @points = $self->compute_missing_points();
-  for my $i (0 .. $#points - 1) {
-    $current = $points[$i];
-    $next = $points[$i+1];
-    $data .= circle($self->pixels($current), 15, $i++);
-    $data .= circle($self->partway($current, $next, 0.3), 3, 'a');
-    $data .= circle($self->partway($current, $next, 0.5), 5, 'b');
-    $data .= circle($self->partway($current, $next, 0.7), 3, 'c');
-  }
-  $data .= circle($self->pixels($next), 15, $#points);
-
-  my ($x, $y) = $self->pixels($points[0]); $y += 30;
-  $data .= "<text fill='#000' font-size='20pt' "
-    . "text-anchor='middle' dominant-baseline='central' "
-    . "x='$x' y='$y'>closed</text>"
-      if $closed;
-
-  return $data;
-}
-
-sub circle {
-  my ($x, $y, $r, $i) = @_;
-  my $data = "<circle fill='#666' cx='$x' cy='$y' r='$r'/>";
-  $data .= "<text fill='#000' font-size='20pt' "
-    . "text-anchor='middle' dominant-baseline='central' "
-    . "x='$x' y='$y'>$i</text>" if $i;
-  return "$data\n";
-}
-
-package Line::Hex;
-
-use Modern::Perl '2018';
-use Mojo::Base 'Line';
-
-sub pixels {
-  my ($self, $point) = @_;
-  my ($x, $y) = ($point->x * $dx * 3/2, ($point->y + $self->offset->[$point->z]) * $dy - $point->x % 2 * $dy/2);
-  return ($x, $y) if wantarray;
-  return sprintf("%.1f,%.1f", $x, $y);
-}
-
-# Brute forcing the "next" step by trying all the neighbors. The
-# connection data to connect to neighboring hexes.
-#
-# Example Map             Index for the array
-#
-#      0201                      2
-#  0102    0302               1     3
-#      0202    0402
-#  0103    0303               6     4
-#      0203    0403              5
-#  0104    0304
-#
-#  Note that the arithmetic changes when x is odd.
-
-sub one_step {
-  my ($self, $from, $to) = @_;
-  my $delta = [[[-1,  0], [ 0, -1], [+1,  0], [+1, +1], [ 0, +1], [-1, +1]],  # x is even
-	       [[-1, -1], [ 0, -1], [+1, -1], [+1,  0], [ 0, +1], [-1,  0]]]; # x is odd
-  my ($min, $best);
-  for my $i (0 .. 5) {
-    # make a new guess
-    my ($x, $y) = ($from->x + $delta->[$from->x % 2]->[$i]->[0],
-		   $from->y + $delta->[$from->x % 2]->[$i]->[1]);
-    my $d = ($to->x - $x) * ($to->x - $x)
-          + ($to->y - $y) * ($to->y - $y);
-    if (!defined($min) || $d < $min) {
-      $min = $d;
-      $best = Point->new(x => $x, y => $y, z => $from->z);
-    }
-  }
-  return $best;
-}
-
-package Line::Square;
-
-use Modern::Perl '2018';
-use Mojo::Base 'Line';
-
-sub pixels {
-  my ($self, $point) = @_;
-  my ($x, $y) = ($point->x * $dy, ($point->y + $self->offset->[$point->z]) * $dy);
-  return ($x, $y) if wantarray;
-  return sprintf("%d,%d", $x, $y);
-}
-
-sub one_step {
-  my ($self, $from, $to) = @_;
-  my ($min, $best);
-  my $dx = $to->x - $from->x;
-  my $dy = $to->y - $from->y;
-  if (abs($dx) >= abs($dy)) {
-    my $x = $from->x + ($dx > 0 ? 1 : -1);
-    return Point->new(x => $x, y => $from->y, z => $from->z);
-  } else {
-    my $y = $from->y + ($dy > 0 ? 1 : -1);
-    return Point->new(x => $from->x, y => $y, z => $from->z);
-  }
-}
-
-package Hex;
-
-use Modern::Perl '2018';
-use Mojo::Util qw(url_escape);
-use Encode qw(encode_utf8);
-use Mojo::Base -base;
-
-has 'x';
-has 'y';
-has 'z';
-has 'type';
-has 'label';
-has 'size';
-has 'map';
-
-sub str {
-  my $self = shift;
-  return '(' . $self->x . ',' . $self->y . ')';
-}
-
-my @hex = ([-$dx, 0], [-$dx/2, $dy/2], [$dx/2, $dy/2],
-	   [$dx, 0], [$dx/2, -$dy/2], [-$dx/2, -$dy/2]);
-
-sub corners {
-  return @hex;
-}
-
-sub svg_region {
-  my ($self, $attributes, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  my $id = "hex$x$y$z";
-  $y += $offset->[$z];
-  my $points = join(" ", map {
-    sprintf("%.1f,%.1f",
-	    $x * $dx * 3/2 + $_->[0],
-	    $y * $dy - $self->x % 2 * $dy/2 + $_->[1]) } $self->corners());
-  return qq{    <polygon id="$id" $attributes points="$points" />\n}
-}
-
-sub svg {
-  my ($self, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = '';
-  for my $type (@{$self->type}) {
-    $data .= sprintf(qq{    <use x="%.1f" y="%.1f" xlink:href="#%s" />\n},
-		     $x * $dx * 3/2, $y * $dy - $x%2 * $dy/2, $type);
-  }
-  return $data;
-}
-
-sub svg_coordinates {
-  my ($self, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = '';
-  $data .= qq{    <text text-anchor="middle"};
-  $data .= sprintf(qq{ x="%.1f" y="%.1f"},
-		   $x * $dx * 3/2,
-		   $y * $dy - $x%2 * $dy/2 - $dy * 0.4);
-  $data .= ' ';
-  $data .= $self->map->text_attributes || '';
-  $data .= '>';
-  $data .= Point::coord($self->x, $self->y, ".");
-  $data .= qq{</text>\n};
-  return $data;
-}
-
-sub svg_label {
-  my ($self, $url, $offset) = @_;
-  return '' unless defined $self->label;
-  my $attributes = $self->map->label_attributes;
-  if ($self->size) {
-    if (not $attributes =~ s/\bfont-size="\d+pt"/'font-size="' . $self->size . 'pt"'/e) {
-      $attributes .= ' font-size="' . $self->size . '"';
-    }
-  }
-  $url =~ s/\%s/url_escape(encode_utf8($self->label))/e or $url .= url_escape(encode_utf8($self->label)) if $url;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = sprintf(qq{    <g><text text-anchor="middle" x="%.1f" y="%.1f" %s %s>}
-                     . $self->label
-                     . qq{</text>},
-                     $x * $dx * 3/2, $y * $dy - $x%2 * $dy/2 + $dy * 0.4,
-                     $attributes ||'',
-		     $self->map->glow_attributes ||'');
-  $data .= qq{<a xlink:href="$url">} if $url;
-  $data .= sprintf(qq{<text text-anchor="middle" x="%.1f" y="%.1f" %s>}
-		   . $self->label
-		   . qq{</text>},
-		   $x * $dx * 3/2, $y * $dy - $x%2 * $dy/2 + $dy * 0.4,
-		   $attributes ||'');
-  $data .= qq{</a>} if $url;
-  $data .= qq{</g>\n};
-  return $data;
-}
-
-package Square;
-
-use Modern::Perl '2018';
-use Mojo::Util qw(url_escape);
-use Mojo::Base -base;
-
-has 'x';
-has 'y';
-has 'z';
-has 'type';
-has 'label';
-has 'size';
-has 'map';
-
-sub str {
-  my $self = shift;
-  return '(' . $self->x . ',' . $self->y . ')';
-}
-
-sub svg_region {
-  my ($self, $attributes, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  my $id = "square$x$y$z";
-  $y += $offset->[$z];
-  $x = ($x - 0.5) * $dy;
-  $y = ($y - 0.5) * $dy; # square!
-  return qq{    <rect id="$id" $attributes x="$x" y="$y" width="$dy" height="$dy" />\n}
-}
-
-sub svg {
-  my ($self, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = '';
-  for my $type (@{$self->type}) {
-    $data .= sprintf(qq{    <use x="%d" y="%d" xlink:href="#%s" />\n},
-		     $x * $dy,
-		     $y * $dy, # square
-		     $type);
-  }
-  return $data;
-}
-
-sub svg_coordinates {
-  my ($self, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = '';
-  $data .= qq{    <text text-anchor="middle"};
-  $data .= sprintf(qq{ x="%d" y="%d"},
-		   $x * $dy,
-		   ($y - 0.4) * $dy); # square
-  $data .= ' ';
-  $data .= $self->map->text_attributes || '';
-  $data .= '>';
-  $data .= Point::coord($self->x, $self->y, "."); # original
-  $data .= qq{</text>\n};
-  return $data;
-}
-
-sub svg_label {
-  my ($self, $url, $offset) = @_;
-  return '' unless defined $self->label;
-  my $attributes = $self->map->label_attributes;
-  if ($self->size) {
-    if (not $attributes =~ s/\bfont-size="\d+pt"/'font-size="' . $self->size . 'pt"'/e) {
-      $attributes .= ' font-size="' . $self->size . '"';
-    }
-  }
-  $url =~ s/\%s/url_escape($self->label)/e or $url .= url_escape($self->label) if $url;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = sprintf(qq{    <g><text text-anchor="middle" x="%d" y="%d" %s %s>}
-                     . $self->label
-                     . qq{</text>},
-                     $x  * $dy,
-		     ($y + 0.4) * $dy, # square
-                     $attributes ||'',
-		     $self->map->glow_attributes ||'');
-  $data .= qq{<a xlink:href="$url">} if $url;
-  $data .= sprintf(qq{<text text-anchor="middle" x="%d" y="%d" %s>}
-		   . $self->label
-		   . qq{</text>},
-		   $x * $dy,
-		   ($y + 0.4) * $dy, # square
-		   $attributes ||'');
-  $data .= qq{</a>} if $url;
-  $data .= qq{</g>\n};
-  return $data;
-}
+our $debug;
+our $log;
+our $contrib;
 
 package Mapper;
+
+use Game::TextMapper::Point;
 
 use Modern::Perl '2018';
 use Mojo::UserAgent;
@@ -574,7 +116,7 @@ sub process {
       $line->id('line' . $line_id++);
       my @points;
       while ($str =~ /\G(-?\d\d)(-?\d\d)(\d\d)?-?/cg) {
-	push(@points, Point->new(x => $1, y => $2, z => $3||'00'));
+	push(@points, Game::TextMapper::Point->new(x => $1, y => $2, z => $3||'00'));
       }
       $line->points(\@points);
       push(@{$self->lines}, $line);
@@ -857,24 +399,28 @@ sub svg {
 
 package Mapper::Hex;
 
+use Game::TextMapper::Constants qw($dx $dy);
+use Game::TextMapper::Hex;
+use Game::TextMapper::Line::Hex;
+
 use Modern::Perl '2018';
 use Mojo::Base 'Mapper';
 
 sub make_region {
   my $self = shift;
-  return Hex->new(@_);
+  return Game::TextMapper::Hex->new(@_);
 }
 
 sub make_line {
   my $self = shift;
-  return Line::Hex->new(@_);
+  return Game::TextMapper::Line::Hex->new(@_);
 }
 
 sub shape {
   my $self = shift;
   my $attributes = shift;
   my $points = join(" ", map {
-    sprintf("%.1f,%.1f", $_->[0], $_->[1]) } Hex::corners());
+    sprintf("%.1f,%.1f", $_->[0], $_->[1]) } Game::TextMapper::Hex::corners());
   return qq{<polygon $attributes points='$points' />};
 }
 
@@ -887,17 +433,21 @@ sub viewbox {
 
 package Mapper::Square;
 
+use Game::TextMapper::Constants qw($dy);
+use Game::TextMapper::Square;
+use Game::TextMapper::Line::Square;
+
 use Modern::Perl '2018';
 use Mojo::Base 'Mapper';
 
 sub make_region {
   my $self = shift;
-  return Square->new(@_);
+  return Game::TextMapper::Square->new(@_);
 }
 
 sub make_line {
   my $self = shift;
-  return Line::Square->new(@_);
+  return Game::TextMapper::Line::Square->new(@_);
 }
 
 sub shape {
@@ -915,6 +465,7 @@ sub viewbox {
 }
 
 package Smale;
+use Game::TextMapper::Point;
 use Modern::Perl '2018';
 
 my %world = ();
@@ -1099,7 +650,7 @@ sub place_major {
   my $hex = one(full_hexes($x, $y));
   $x += $hex->[0];
   $y += $hex->[1];
-  my $coordinates = Point::coord($x, $y);
+  my $coordinates = Game::TextMapper::Point::coord($x, $y);
   my $primary = $reverse_lookup{$world{$coordinates}};
   my ($color, $terrain) = split(' ', $world{$coordinates}, 2);
   if ($encounter eq 'settlement') {
@@ -1135,10 +686,10 @@ sub populate_region {
 sub pick_unassigned {
   my ($x, $y, @region) = @_;
   my $hex = one(@region);
-  my $coordinates = Point::coord($x + $hex->[0], $y + $hex->[1]);
+  my $coordinates = Game::TextMapper::Point::coord($x + $hex->[0], $y + $hex->[1]);
   while ($world{$coordinates}) {
     $hex = one(@region);
-    $coordinates = Point::coord($x + $hex->[0], $y + $hex->[1]);
+    $coordinates = Game::TextMapper::Point::coord($x + $hex->[0], $y + $hex->[1]);
   }
   return $coordinates;
 }
@@ -1147,7 +698,7 @@ sub pick_remaining {
   my ($x, $y, @region) = @_;
   my @coordinates = ();
   for my $hex (@region) {
-    my $coordinates = Point::coord($x + $hex->[0], $y + $hex->[1]);
+    my $coordinates = Game::TextMapper::Point::coord($x + $hex->[0], $y + $hex->[1]);
     push(@coordinates, $coordinates) unless $world{$coordinates};
   }
   return @coordinates;
@@ -1191,7 +742,7 @@ sub half_hexes {
 
 sub generate_region {
   my ($x, $y, $primary) = @_;
-  $world{Point::coord($x, $y)} = one($primary{$primary});
+  $world{Game::TextMapper::Point::coord($x, $y)} = one($primary{$primary});
 
   my @region = full_hexes($x, $y);
   my $terrain;
@@ -1270,14 +821,14 @@ sub seed_region {
 
 sub agriculture {
   for my $hex (@needs_fields) {
-    verbose("looking to plant fields near " . Point::coord($hex->[0], $hex->[1]));
+    verbose("looking to plant fields near " . Game::TextMapper::Point::coord($hex->[0], $hex->[1]));
     my $delta = [[[-1,  0], [ 0, -1], [+1,  0], [+1, +1], [ 0, +1], [-1, +1]],  # x is even
 		 [[-1, -1], [ 0, -1], [+1, -1], [+1,  0], [ 0, +1], [-1,  0]]]; # x is odd
     my @plains;
     for my $i (0 .. 5) {
       my ($x, $y) = ($hex->[0] + $delta->[$hex->[0] % 2]->[$i]->[0],
 		     $hex->[1] + $delta->[$hex->[0] % 2]->[$i]->[1]);
-      my $coordinates = Point::coord($x, $y);
+      my $coordinates = Game::TextMapper::Point::coord($x, $y);
       if ($world{$coordinates}) {
 	my ($color, $terrain) = split(' ', $world{$coordinates}, 2);
 	verbose("  $coordinates is " . $world{$coordinates} . " ie. " . $reverse_lookup{$world{$coordinates}});
@@ -1337,6 +888,7 @@ sub generate_map {
 }
 
 package Schroeder::Base;
+use Game::TextMapper::Point;
 use Modern::Perl '2018';
 use Mojo::Base -role;
 
@@ -1353,7 +905,7 @@ sub xy {
 
 sub coordinates {
   my ($x, $y) = @_;
-  return Point::coord($x, $y);
+  return Game::TextMapper::Point::coord($x, $y);
 }
 
 sub legal {
@@ -2743,6 +2295,8 @@ sub arrows {
 
 
 package Gridmapper;
+
+use Game::TextMapper::Constants qw($dx $dy);
 
 use Modern::Perl '2018';
 use List::Util qw'shuffle none any min max all';
@@ -4477,6 +4031,10 @@ sub run {
 }
 
 package Game::TextMapper;
+
+use Game::TextMapper::Point;
+use Game::TextMapper::Line;
+
 use Modern::Perl '2018';
 use Mojolicious::Lite;
 use Mojo::DOM;
@@ -4724,7 +4282,7 @@ sub border_modification {
       $miny = $y if not defined $miny or $y < $miny;
       $maxx = $x if not defined $maxx or $x > $maxx;
       $maxy = $y if not defined $maxy or $y > $maxy;
-      my $point = Point->new(x => $x + $left, y => $y + $top);
+      my $point = Game::TextMapper::Point->new(x => $x + $left, y => $y + $top);
       $seen{$point->coordinates} = 1 if $empty;
       push(@lines, [$point, $text]);
     } elsif (($points, $text) = /^(-?\d\d-?\d\d(?:--?\d\d-?\d\d)+)\s+(.*)/) {
@@ -4732,9 +4290,9 @@ sub border_modification {
       my @points;
       while (@numbers) {
 	my ($x, $y) = splice(@numbers, 0, 2);
-	push(@points, Point->new(x => $x + $left, y => $y + $top));
+	push(@points, Game::TextMapper::Point->new(x => $x + $left, y => $y + $top));
       }
-      push(@lines, [Line->new(points => \@points), $text]);
+      push(@lines, [Game::TextMapper::Line->new(points => \@points), $text]);
     } else {
       push(@lines, $_);
     }
@@ -4747,12 +4305,12 @@ sub border_modification {
   foreach (@lines) {
     if (ref) {
       my ($it, $text) = @$_;
-      if (ref($it) eq 'Point') {
+      if (ref($it) eq 'Game::TextMapper::Point') {
 	if ($it->x <= $maxx and $it->x >= $minx
 	    and $it->y <= $maxy and $it->y >= $miny) {
 	  push(@temp, $_);
 	}
-      } else { # Line
+      } else { # Game::TextMapper::Line
 	my $outside = none {
 	  ($_->x <= $maxx and $_->x >= $minx
 	   and $_->y <= $maxy and $_->y >= $miny)
@@ -4768,7 +4326,7 @@ sub border_modification {
   if ($empty) {
     for $x ($minx .. $maxx) {
       for $y ($miny .. $maxy) {
-	my $point = Point->new(x => $x, y => $y);
+	my $point = Game::TextMapper::Point->new(x => $x, y => $y);
 	if (not $seen{$point->coordinates}) {
 	  push(@lines, [$point, "empty"]);
 	}
@@ -4784,9 +4342,9 @@ sub border_modification {
        # points before lines
        or ref($b->[0]) cmp ref($a->[0])
        # if both are points, compare the coordinates
-       or ref($a->[0]) eq 'Point' and $a->[0]->cmp($b->[0])
+       or ref($a->[0]) eq 'Game::TextMapper::Point' and $a->[0]->cmp($b->[0])
        # if both are lines, compare the first two coordinates (the minimum line length)
-       or ref($a->[0]) eq 'Line' and ($a->[0]->points->[0]->cmp($b->[0]->points->[0])
+       or ref($a->[0]) eq 'Game::TextMapper::Line' and ($a->[0]->points->[0]->cmp($b->[0]->points->[0])
 				      or $a->[0]->points->[1]->cmp($b->[0]->points->[1]))
        # if bot are the same point (!) …
        or 0)
@@ -4796,12 +4354,12 @@ sub border_modification {
 	      map {
 		if (ref) {
 		  my ($it, $text) = @$_;
-		  if (ref($it) eq 'Point') {
-		    Point::coord($it->x, $it->y) . " " . $text
+		  if (ref($it) eq 'Game::TextMapper::Point') {
+		    Game::TextMapper::Point::coord($it->x, $it->y) . " " . $text
 		  } else {
 		    my $points = $it->points;
 		    join("-",
-			 map { Point::coord($_->x, $_->y) } @$points)
+			 map { Game::TextMapper::Point::coord($_->x, $_->y) } @$points)
 			. " " . $text;
 		  }
 		} else {
@@ -5047,6 +4605,8 @@ get '/help' => sub {
 };
 
 app->start;
+
+1;
 
 __DATA__
 

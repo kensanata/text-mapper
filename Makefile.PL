@@ -47,6 +47,9 @@ sub postamble {
   my $self = shift;
   my @ret = File::ShareDir::Install::postamble($self);
   push @ret, <<'EOT';
+check:
+	find lib -name '*.pm' -exec perl -Ilib -c '{}' ';'
+
 # Assuming you want to run Hex Describe on port 3000 and Face Generator on port
 # 3020, start Text Mapper on port 3010.
 run:
