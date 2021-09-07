@@ -4606,8 +4606,6 @@ get '/help' => sub {
 
 app->start;
 
-1;
-
 __DATA__
 
 =encoding utf8
