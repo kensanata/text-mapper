@@ -1,4 +1,3 @@
-#!/usr/bin/env perl
 # Copyright (C) 2009-2021  Alex Schroeder <alex@gnu.org>
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -21,5 +20,9 @@ our @EXPORT_OK = qw($dx $dy);
 
 our $dx = 100;
 our $dy = 100*sqrt(3);
+
+our $log;
+our $debug;
+our $contrib;
 
 1;

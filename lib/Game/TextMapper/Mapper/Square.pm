@@ -13,37 +13,37 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package Game::TextMapper::Point;
+package Game::TextMapper::Mapper::Square;
+
+use Game::TextMapper::Constants qw($dy);
+use Game::TextMapper::Square;
+use Game::TextMapper::Line::Square;
+
 use Modern::Perl '2018';
-use Mojo::Base -base;
+use Mojo::Base 'Game::TextMapper::Mapper';
 
-has 'x';
-has 'y';
-has 'z';
-
-sub equal {
-  my ($self, $other) = @_;
-  return $self->x == $other->x && $self->y == $other->y;
+sub make_region {
+  my $self = shift;
+  return Game::TextMapper::Square->new(@_);
 }
 
-sub cmp {
-  my ($a, $b) = @_;
-  return $a->x <=> $b->x || $a->y <=> $b->y;
+sub make_line {
+  my $self = shift;
+  return Game::TextMapper::Line::Square->new(@_);
 }
 
-sub coordinates {
-  my ($self) = @_;
-  return $self->x, $self->y if wantarray;
-  return $self->x . "," . $self->y;
+sub shape {
+  my $self = shift;
+  my $attributes = shift;
+  my $half = $dy / 2;
+  return qq{<rect $attributes x="-$half" y="-$half" width="$dy" height="$dy" />};
 }
 
-sub coord {
-  my ($x, $y, $separator) = @_;
-  $separator //= "";
-  # print (1,1) as 0101; print (-1,-1) as -01-01
-  return sprintf("%0*d$separator%0*d",
-		 ($x < 0 ? 3 : 2), $x,
-		 ($y < 0 ? 3 : 2), $y);
+sub viewbox {
+  my $self = shift;
+  my ($minx, $miny, $maxx, $maxy) = @_;
+  map { int($_) } (($minx - 1) * $dy, ($miny - 1) * $dy,
+		   ($maxx + 1) * $dy, ($maxy + 1) * $dy);
 }
 
 1;

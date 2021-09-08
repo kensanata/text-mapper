@@ -53,7 +53,7 @@ check:
 # Assuming you want to run Hex Describe on port 3000 and Face Generator on port
 # 3020, start Text Mapper on port 3010.
 run:
-	morbo --mode development --listen http://*:3010 script/text-mapper
+	morbo --verbose --listen http://*:3010 script/text-mapper --watch script
 EOT
   return join "\n", @ret;
 }

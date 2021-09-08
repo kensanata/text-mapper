@@ -35,4 +35,4 @@ GNU Affero General Public License
 use Modern::Perl;
 use Mojo::Home;
 my $home = Mojo::Home->new;
-do $home->detect('Game::TextMapper')->child('lib/Game/TextMapper.pm');
+require $home->detect('Game::TextMapper')->child('lib/Game/TextMapper.pm');
