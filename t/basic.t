@@ -91,6 +91,24 @@ $t->get_ok('/island/random?type=square')
     ->text_is('g#coordinates text[x=173][y=103]', "01.01")
     ->element_exists('g#regions rect#square010100');
 
+$t->get_ok('/apocalypse/random')
+    ->status_is(200)
+    ->element_exists('defs g#cave path[stroke=white]')
+    ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
+    ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
+    ->element_exists('g#regions polygon#hex010100');
+
+$t->get_ok('/traveller/random')
+    ->status_is(200)
+    ->text_is('defs g#pirate text', '☠')
+    ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
+    ->element_exists('g#regions polygon#hex010100');
+
+$t->get_ok('/gridmapper/random')
+    ->status_is(200)
+    ->element_exists('defs g#bed rect[stroke=black]')
+    ->element_exists('g#regions rect#square010100');
+
 # warn $t->tx->res->body;
 
 done_testing;
