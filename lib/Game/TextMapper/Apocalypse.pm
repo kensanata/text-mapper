@@ -15,6 +15,23 @@
 
 package Game::TextMapper::Apocalypse;
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Apocalypse - generate postapocalyptic landscape
+
+=head1 DESCRIPTION
+
+This fills the map with random seed regions which then grow to fill the map.
+
+Settlements are placed at random.
+
+Every mountain region is the source of a river. Rivers flow through regions that
+are not themselves mountains or a deserts. Rivers end in swamps.
+
+=cut
+
 use Modern::Perl '2018';
 use List::Util qw(shuffle any none);
 use Mojo::Base -base;

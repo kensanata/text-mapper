@@ -13,6 +13,28 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Mapper - a text map parser and builder
+
+=head1 DESCRIPTION
+
+This class knows how to parse a text containing a map description into SVG
+definitions, and regions. Once the map is built, this class knows how to
+generate the SVG for the entire map.
+
+The details depend on whether the map is a hex map or a square map. You should
+use the appropriate class instead of this one.
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Mapper::Hex>
+L<Game::TextMapper::Mapper::Square>
+
+=cut
+
 package Game::TextMapper::Mapper;
 
 use Modern::Perl '2018';

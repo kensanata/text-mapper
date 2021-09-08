@@ -12,6 +12,20 @@
 #
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Smale - generate fantasy wilderness maps
+
+=head1 DESCRIPTION
+
+This generates a wilderness map based on the algorithm by Erin D. Smale. See the
+blog posts at L<http://www.welshpiper.com/hex-based-campaign-design-part-1/> and
+L<http://www.welshpiper.com/hex-based-campaign-design-part-2/> for more
+information.
+
+=cut
 
 package Game::TextMapper::Smale;
 

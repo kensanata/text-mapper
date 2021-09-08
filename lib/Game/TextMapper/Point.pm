@@ -13,6 +13,19 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Point - a point on the map
+
+=head1 DESCRIPTION
+
+This is a simple class to hold points. Points have coordinates and know how to
+print them.
+
+=cut
+
 package Game::TextMapper::Point;
 use Modern::Perl '2018';
 use Mojo::Base -base;

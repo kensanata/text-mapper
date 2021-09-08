@@ -13,6 +13,21 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Hex - a hex on a map
+
+=head1 DESCRIPTION
+
+This class holds information about a hex region: coordinates, a label, and
+types. Types are the kinds of symbols that can be found in the region: a keep, a
+tree, a mountain. They correspond to SVG definitions. The class knows how to
+draw a SVG polygon at the correct coordinates using these definitions.
+
+=cut
+
 package Game::TextMapper::Hex;
 
 use Game::TextMapper::Constants qw($dx $dy);

@@ -13,6 +13,26 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Line::Square - a line implementation for square maps
+
+=head1 DESCRIPTION
+
+The line connects two points on a square map. This class knows how to compute
+all the regions between these two points, how to compute the next region along
+the line, and how to output SVG.
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Point>
+L<Game::TextMapper::Line::Line>
+L<Game::TextMapper::Line::Hex>
+
+=cut
+
 package Game::TextMapper::Line::Square;
 
 use Game::TextMapper::Constants qw($dx $dy);

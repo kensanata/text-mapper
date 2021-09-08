@@ -13,6 +13,21 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Traveller - generate Traveller subsector maps
+
+=head1 DESCRIPTION
+
+This generates subsector maps suitable for the Traveller game in its various
+editions. Trade and communication routes are based on starports, bases, and
+trade codes and jump distance; the potential connections are then winnowed down
+using a minimal spanning tree.
+
+=cut
+
 package Game::TextMapper::Traveller;
 
 use Modern::Perl '2018';

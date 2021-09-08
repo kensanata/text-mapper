@@ -13,6 +13,30 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Line - a line between two points
+
+=head1 DESCRIPTION
+
+The line connects two points. This class knows how to compute all the regions
+between these two points, how to compute the next region along the line, and how
+to output SVG.
+
+In order to do this, the class needs to know how to work with the regions on the
+map. This is different for hexes and squares. Therefore you should always be
+using the appropriate Hex or Square class instead.
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Point>
+L<Game::TextMapper::Line::Hex>
+L<Game::TextMapper::Line::Square>
+
+=cut
+
 package Game::TextMapper::Line;
 
 use Modern::Perl '2018';

@@ -13,6 +13,25 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Mapper::Hex - a mapper for hex maps
+
+=head1 DESCRIPTION
+
+This class knows how to parse a text containing a hex map description into SVG
+definitions, and regions. Once the map is built, this class knows how to
+generate the SVG for the entire map.
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Mapper>
+L<Game::TextMapper::Mapper::Square>
+
+=cut
+
 package Game::TextMapper::Mapper::Hex;
 
 use Game::TextMapper::Constants qw($dx $dy);

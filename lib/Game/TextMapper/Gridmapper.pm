@@ -13,6 +13,26 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Gridmapper - generate dungeon maps
+
+=head1 DESCRIPTION
+
+This generates dungeon maps. At its core, this uses a 3×3 layout, 9 sections
+total. 5 or 7 of these 9 sections get a room. The connections for the rooms is
+picked at random from a fixed list of configurations (plus mirrored and rotated
+variants). The first room contains the stairs.
+
+To generate bigger dungeons, more of these 3×3 layouts are added to the first.
+As the number of rooms is dynamic, the algorithm figures out how to best use a
+number of layouts containing 5 or 7 rooms tp get to that number, and then simply
+drops the extra rooms.
+
+=cut
+
 package Game::TextMapper::Gridmapper;
 
 use Game::TextMapper::Constants qw($dx $dy);
