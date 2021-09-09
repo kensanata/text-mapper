@@ -13,6 +13,37 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Alpine - generate an alpine landscape
+
+=head1 DESCRIPTION
+
+This fills the map with some mountains and then traces the water flow down to
+the sea and off the map. With water, forests grow; but if the area remains at
+the same altitude, swamps form.
+
+Settlements are placed at random in the habitable zones, but far enough from
+each other, and connected by trails.
+
+In order to support hex and square maps, this class uses roles to implement
+coordinates, neighbours, and all that. This is why you need to specify the role
+before creating an instance of this class:
+
+    return Game::TextMapper::Schroeder::Alpine
+	->with_roles('Game::TextMapper::Schroeder::Hex')->new()
+	->generate_map(@params);
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Schroeder::Base>
+L<Game::TextMapper::Schroeder::Hex>
+L<Game::TextMapper::Schroeder::Square>
+
+=cut
+
 package Game::TextMapper::Schroeder::Alpine;
 use Modern::Perl '2018';
 use Mojo::Base -base;

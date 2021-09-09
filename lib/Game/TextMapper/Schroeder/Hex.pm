@@ -13,6 +13,28 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Schroeder::Hex - a role for hex map generators
+
+=head1 DESCRIPTION
+
+This role provides basic functionality for map generation with hex maps: the
+number of neighbours within one or two regions distance, how to pick a random
+neighbour direction, how to compute the coordinates of these neighbours, how to
+draw arrows towards these neighbours.
+
+This class is different from L<Game::TextMapper::Hex>!
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Schroeder::Base>
+L<Game::TextMapper::Schroeder::Square>
+
+=cut
+
 package Game::TextMapper::Schroeder::Hex;
 use Modern::Perl '2018';
 use Mojo::Base -role;

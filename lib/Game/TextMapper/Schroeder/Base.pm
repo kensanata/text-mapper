@@ -13,6 +13,25 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Schroeder::Base - a base role for map generators
+
+=head1 DESCRIPTION
+
+Map generators that work for both hex maps and square maps use this role and
+either the Hex or Square role to provide basic functionality for their regions,
+such as the number of neighbours they have (six or four).
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Schroeder::Hex>
+L<Game::TextMapper::Schroeder::Square>
+
+=cut
+
 package Game::TextMapper::Schroeder::Base;
 use Game::TextMapper::Point;
 use Modern::Perl '2018';

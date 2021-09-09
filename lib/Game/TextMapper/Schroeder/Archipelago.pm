@@ -13,6 +13,18 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Archipelago - work in progress
+
+=head1 DESCRIPTION
+
+This is an unfinished idea.
+
+=cut
+
 package Game::TextMapper::Schroeder::Archipelago;
 use Modern::Perl '2018';
 use Mojo::Base -base;

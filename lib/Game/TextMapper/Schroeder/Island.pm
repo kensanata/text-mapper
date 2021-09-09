@@ -13,6 +13,35 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Schroeder::Island - generate an island chain
+
+=head1 DESCRIPTION
+
+This creates an island chain in an ocean, based on the idea of a hotspot moving
+across the map. All regions atop the hotspot get raised at random; all regions
+outside the hotspot are eroded at random. This leaves a chain of ever smaller
+islands behind.
+
+The rest of the code, river formation and all that, is based on the Alpine
+algorithm and therefore it also requires the use of roles.
+
+    return Game::TextMapper::Schroeder::Island
+	->with_roles('Game::TextMapper::Schroeder::Square')->new()
+	->generate_map(@params);
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Schroeder::Alpine>
+L<Game::TextMapper::Schroeder::Base>
+L<Game::TextMapper::Schroeder::Hex>
+L<Game::TextMapper::Schroeder::Square>
+
+=cut
+
 package Game::TextMapper::Schroeder::Island;
 use Modern::Perl '2018';
 use Mojo::Base 'Game::TextMapper::Schroeder::Alpine';

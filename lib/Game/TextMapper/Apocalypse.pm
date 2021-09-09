@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package Game::TextMapper::Apocalypse;
-
 =encoding utf8
 
 =head1 NAME
@@ -32,6 +30,7 @@ are not themselves mountains or a deserts. Rivers end in swamps.
 
 =cut
 
+package Game::TextMapper::Apocalypse;
 use Modern::Perl '2018';
 use List::Util qw(shuffle any none);
 use Mojo::Base -base;
