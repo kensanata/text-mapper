@@ -19,13 +19,10 @@ use Modern::Perl '2018';
 
 our $VERSION = 1.00;
 
-our $debug;
-our $log;
-our $contrib;
-
 package Mojolicious::Command::render;
 use Modern::Perl '2018';
 use Mojo::Base 'Mojolicious::Command';
+use File::ShareDir 'dist_dir';
 
 has description => 'Render map from STDIN';
 
@@ -41,8 +38,9 @@ EOF
 sub run {
   my ($self, @args) = @_;
   local $/ = undef;
-  my $mapper = new Game::TextMapper::Mapper::Hex;
-  $mapper->initialize(<STDIN>, $log, $contrib);
+  my $dist_dir = $self->app->config('contrib') // dist_dir('Game-TextMapper');
+  my $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
+  $mapper->initialize(<STDIN>);
   print $mapper->svg;
 }
 
@@ -69,11 +67,12 @@ EOF
 
 sub run {
   my ($self, @args) = @_;
-  print Game::TextMapper::Smale::generate_map(undef, undef, undef, $log);
+  print Game::TextMapper::Smale::generate_map();
 }
 
 package Game::TextMapper;
 
+use Game::TextMapper::Log;
 use Game::TextMapper::Point;
 use Game::TextMapper::Line;
 use Game::TextMapper::Mapper::Hex;
@@ -90,10 +89,10 @@ use Modern::Perl '2018';
 use Mojolicious::Lite;
 use Mojo::DOM;
 use Mojo::Util qw(url_escape xml_escape);
+use File::ShareDir 'dist_dir';
 use Pod::Simple::HTML;
 use Pod::Simple::Text;
 use List::Util qw(none);
-use File::ShareDir 'dist_dir';
 use Cwd;
 
 # Change scheme if "X-Forwarded-Proto" header is set (presumably to HTTPS)
@@ -111,14 +110,13 @@ plugin Config => {
   file => getcwd() . '/text-mapper.conf',
 };
 
-$log = Mojo::Log->new;
+my $log = Game::TextMapper::Log->get;
 $log->level(app->config('loglevel'));
 $log->path(app->config('logfile'));
 $log->info($log->path ? "Logfile is " . $log->path : "Logging to stderr");
 
-$debug = $log->level eq 'debug';
-$contrib = app->config('contrib') // dist_dir('Game-TextMapper');
-$log->debug("Reading contrib files from $contrib");
+my $dist_dir = app->config('contrib') // dist_dir('Game-TextMapper');
+$log->debug("Reading contrib files from $dist_dir");
 
 get '/' => sub {
   my $c = shift;
@@ -126,15 +124,15 @@ get '/' => sub {
   if ($param) {
     my $mapper;
     if ($c->param('type') and $c->param('type') eq 'square') {
-      $mapper = new Game::TextMapper::Mapper::Square;
+      $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
     } else {
-      $mapper = new Game::TextMapper::Mapper::Hex;
+      $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
     }
-    $mapper->initialize($param, $log, $contrib);
+    $mapper->initialize($param);
     $c->render(text => $mapper->svg, format => 'svg');
   } else {
     my $mapper = new Game::TextMapper::Mapper;
-    my $map = $mapper->initialize('', $log, $contrib)->example();
+    my $map = $mapper->initialize('')->example();
     $c->render(template => 'edit', map => $map);
   }
 };
@@ -142,7 +140,7 @@ get '/' => sub {
 any '/edit' => sub {
   my $c = shift;
   my $mapper = new Game::TextMapper::Mapper;
-  my $map = $c->param('map') || $mapper->initialize('', $log, $contrib)->example();
+  my $map = $c->param('map') || $mapper->initialize('')->example();
   $c->render(map => $map);
 };
 
@@ -150,11 +148,11 @@ any '/render' => sub {
   my $c = shift;
   my $mapper;
   if ($c->param('type') and $c->param('type') eq 'square') {
-    $mapper = new Game::TextMapper::Mapper::Square;
+    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
   } else {
-    $mapper = new Game::TextMapper::Mapper::Hex;
+    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
   }
-  $mapper->initialize($c->param('map'), $log, $contrib);
+  $mapper->initialize($c->param('map'));
   $c->render(text => $mapper->svg, format => 'svg');
 };
 
@@ -177,7 +175,7 @@ get '/random' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  $c->render(template => 'edit', map => Game::TextMapper::Smale::generate_map($bw, $width, $height, $log));
+  $c->render(template => 'edit', map => Game::TextMapper::Smale::generate_map($bw, $width, $height));
 };
 
 get '/smale' => sub {
@@ -186,10 +184,10 @@ get '/smale' => sub {
   my $width = $c->param('width');
   my $height = $c->param('height');
   if ($c->stash('format')||'' eq 'txt') {
-    $c->render(text => Game::TextMapper::Smale::generate_map(undef, $width, $height, $log));
+    $c->render(text => Game::TextMapper::Smale::generate_map(undef, $width, $height));
   } else {
     $c->render(template => 'edit',
-	       map => Game::TextMapper::Smale::generate_map($bw, $width, $height, $log));
+	       map => Game::TextMapper::Smale::generate_map($bw, $width, $height));
   }
 };
 
@@ -198,9 +196,9 @@ get '/smale/random' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  my $map = Game::TextMapper::Smale::generate_map($bw, $width, $height, $log);
-  my $svg = Game::TextMapper::Mapper::Hex->new()
-      ->initialize($map, $log, $contrib)
+  my $map = Game::TextMapper::Smale::generate_map($bw, $width, $height);
+  my $svg = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir)
+      ->initialize($map)
       ->svg();
   $c->render(text => $svg, format => 'svg');
 };
@@ -210,7 +208,7 @@ get '/smale/random/text' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  my $text = Game::TextMapper::Smale::generate_map($bw, $width, $height, $log);
+  my $text = Game::TextMapper::Smale::generate_map($bw, $width, $height);
   $c->render(text => $text, format => 'txt');
 };
 
@@ -232,7 +230,6 @@ sub alpine_map {
 		$c->param('arid'),
 		$seed,
 		$url,
-		$log,
 		$step,
       );
   my $type = $c->param('type') // 'hex';
@@ -263,11 +260,11 @@ get '/alpine/random' => sub {
   my $type = $c->param('type') // 'hex';
   my $mapper;
   if ($type eq 'hex') {
-    $mapper = Game::TextMapper::Mapper::Hex->new();
+    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
   } else {
-    $mapper = Game::TextMapper::Mapper::Square->new();
+    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
   }
-  my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+  my $svg = $mapper->initialize($map)->svg;
   $c->render(text => $svg, format => 'svg');
 };
 
@@ -289,11 +286,11 @@ get '/alpine/document' => sub {
     my $map = alpine_map($c, $step);
     my $mapper;
     if ($type eq 'hex') {
-      $mapper = Game::TextMapper::Mapper::Hex->new();
+      $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
     } else {
-      $mapper = Game::TextMapper::Mapper::Square->new();
+      $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
     }
-    my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+    my $svg = $mapper->initialize($map)->svg;
     $svg =~ s/<\?xml version="1.0" encoding="UTF-8" standalone="no"\?>\n//g;
     push(@maps, $svg);
   };
@@ -448,7 +445,6 @@ sub island_map {
 		$c->param('radius'),
 		$seed,
 		$url,
-		$log,
 		$step,
       );
   my $type = $c->param('type') // 'hex';
@@ -479,11 +475,11 @@ get '/island/random' => sub {
   my $type = $c->param('type') // 'hex';
   my $mapper;
   if ($type eq 'hex') {
-    $mapper = Game::TextMapper::Mapper::Hex->new();
+    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
   } else {
-    $mapper = Game::TextMapper::Mapper::Square->new();
+    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
   }
-  my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+  my $svg = $mapper->initialize($map)->svg;
   $c->render(text => $svg, format => 'svg');
 };
 
@@ -502,7 +498,6 @@ sub archipelago_map {
 		$c->param('bottom'),
 		$seed,
 		$url,
-		$log,
 		$step,
       );
   my $type = $c->param('type') // 'hex';
@@ -533,11 +528,11 @@ get '/archipelago/random' => sub {
   my $type = $c->param('type') // 'hex';
   my $mapper;
   if ($type eq 'hex') {
-    $mapper = Game::TextMapper::Mapper::Hex->new();
+    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
   } else {
-    $mapper = Game::TextMapper::Mapper::Square->new();
+    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
   }
-  my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+  my $svg = $mapper->initialize($map)->svg;
   $c->render(text => $svg, format => 'svg');
 };
 
@@ -549,7 +544,7 @@ sub gridmapper_map {
   my $caves = $c->param('caves') // 0;
   srand($seed);
   return Game::TextMapper::Gridmapper->new()
-      ->generate_map($pillars, $rooms, $caves, $log);
+      ->generate_map($pillars, $rooms, $caves);
 }
 
 get '/gridmapper' => sub {
@@ -565,8 +560,8 @@ get '/gridmapper' => sub {
 get '/gridmapper/random' => sub {
   my $c = shift;
   my $map = gridmapper_map($c);
-  my $mapper = Game::TextMapper::Mapper::Square->new();
-  my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+  my $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
+  my $svg = $mapper->initialize($map)->svg;
   $c->render(text => $svg, format => 'svg');
 };
 
@@ -581,7 +576,7 @@ sub apocalypse_map {
   my $seed = $c->param('seed') || int(rand(1000000000));
   srand($seed);
   return Game::TextMapper::Apocalypse->new()
-      ->generate_map($log);
+      ->generate_map();
 }
 
 get '/apocalypse' => sub {
@@ -597,8 +592,8 @@ get '/apocalypse' => sub {
 get '/apocalypse/random' => sub {
   my $c = shift;
   my $map = apocalypse_map($c);
-  my $mapper = Game::TextMapper::Mapper::Hex->new();
-  my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+  my $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
+  my $svg = $mapper->initialize($map)->svg;
   $c->render(text => $svg, format => 'svg');
 };
 
@@ -614,7 +609,7 @@ sub star_map {
   srand($seed);
   return Game::TextMapper::Traveller
       ->with_roles('Game::TextMapper::Schroeder::Hex')->new()
-      ->generate_map($log);
+      ->generate_map();
 }
 
 get '/traveller' => sub {
@@ -630,8 +625,8 @@ get '/traveller' => sub {
 get '/traveller/random' => sub {
   my $c = shift;
   my $map = star_map($c);
-  my $mapper = Game::TextMapper::Mapper::Hex->new();
-  my $svg = $mapper->initialize($map, $log, $contrib)->svg;
+  my $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
+  my $svg = $mapper->initialize($map)->svg;
   $c->render(text => $svg, format => 'svg');
 };
 
@@ -958,7 +953,7 @@ Library:
 L<https://campaignwiki.org/contrib/default.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?map=include+https://campaignwiki.org/contrib/forgotten-depths.txt>
+L<https://campaignwiki.org/text-mapper?map=include+forgotten-depths.txt>
 
 =head3 Gnomeyland library
 
@@ -969,7 +964,7 @@ Library:
 L<https://campaignwiki.org/contrib/gnomeyland.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?map=include+https://campaignwiki.org/contrib/gnomeyland-example.txt>
+L<https://campaignwiki.org/text-mapper?map=include+gnomeyland-example.txt>
 
 =head3 Traveller library
 
@@ -980,7 +975,7 @@ Library:
 L<https://campaignwiki.org/contrib/traveller.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?map=include+https://campaignwiki.org/contrib/traveller-example.txt>
+L<https://campaignwiki.org/text-mapper?map=include+traveller-example.txt>
 
 =head3 Dungeons library
 
@@ -991,7 +986,7 @@ Library:
 L<https://campaignwiki.org/contrib/gridmapper.txt>
 
 Result:
-L<https://campaignwiki.org/text-mapper?type=square&map=include+https://campaignwiki.org/contrib/gridmapper-example.txt>
+L<https://campaignwiki.org/text-mapper?type=square&map=include+gridmapper-example.txt>
 
 
 =head2 Large Areas

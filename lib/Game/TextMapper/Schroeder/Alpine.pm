@@ -45,13 +45,14 @@ L<Game::TextMapper::Schroeder::Square>
 =cut
 
 package Game::TextMapper::Schroeder::Alpine;
+use Game::TextMapper::Log;
 use Modern::Perl '2018';
 use Mojo::Base -base;
 use Role::Tiny::With;
 with 'Game::TextMapper::Schroeder::Base';
 use List::Util 'shuffle';
 
-my $log;
+my $log = Game::TextMapper::Log->get;
 
 has 'steepness';
 has 'peaks';
@@ -790,7 +791,6 @@ sub generate_map {
   $self->arid(shift // 2);
   my $seed = shift||time;
   my $url = shift;
-  $log = shift;
   my $step = shift||0;
 
   # For documentation purposes, I want to be able to set the pseudo-random

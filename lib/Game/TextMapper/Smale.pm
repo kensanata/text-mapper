@@ -28,12 +28,11 @@ information.
 =cut
 
 package Game::TextMapper::Smale;
-
+use Game::TextMapper::Log;
 use Game::TextMapper::Point;
-
 use Modern::Perl '2018';
 
-my $log;
+my $log = Game::TextMapper::Log->get;
 
 my %world = ();
 
@@ -205,15 +204,11 @@ sub member {
   }
 }
 
-sub verbose {
-  $log->debug(shift);
-}
-
 sub place_major {
   my ($x, $y, $encounter) = @_;
   my $thing = one(@{$encounters{$encounter}});
   return unless $thing;
-  verbose("placing $thing ($encounter) at ($x,$y)");
+  $log->debug("placing $thing ($encounter) at ($x,$y)");
   my $hex = one(full_hexes($x, $y));
   $x += $hex->[0];
   $y += $hex->[1];
@@ -223,7 +218,7 @@ sub place_major {
   if ($encounter eq 'settlement') {
     if ($primary eq 'plains') {
       $color = one('light-soil', 'soil');
-      verbose(" " . $world{$coordinates} . " is $primary and was changed to $color");
+      $log->debug(" " . $world{$coordinates} . " is $primary and was changed to $color");
     }
     if ($primary ne 'plains' or member($thing, 'large-town', 'city')) {
       push(@needs_fields, [$x, $y]);
@@ -317,24 +312,24 @@ sub generate_region {
   for (1..9) {
     my $coordinates = pick_unassigned($x, $y, @region);
     $terrain = one($primary{$primary});
-    verbose(" primary   $coordinates => $terrain");
+    $log->debug(" primary   $coordinates => $terrain");
     $world{$coordinates} = $terrain;
   }
 
   for (1..6) {
     my $coordinates = pick_unassigned($x, $y, @region);
     $terrain =  one($secondary{$primary});
-    verbose(" secondary $coordinates => $terrain");
+    $log->debug(" secondary $coordinates => $terrain");
     $world{$coordinates} = $terrain;
   }
 
   for my $coordinates (pick_remaining($x, $y, @region)) {
     if (rand > 0.1) {
       $terrain = one($tertiary{$primary});
-      verbose(" tertiary  $coordinates => $terrain");
+      $log->debug(" tertiary  $coordinates => $terrain");
     } else {
       $terrain = one($wildcard{$primary});
-      verbose(" wildcard  $coordinates => $terrain");
+      $log->debug(" wildcard  $coordinates => $terrain");
     }
     $world{$coordinates} = $terrain;
   }
@@ -343,13 +338,13 @@ sub generate_region {
     my $random = rand 6;
     if ($random < 3) {
       $terrain = one($primary{$primary});
-      verbose("  halfhex primary   $coordinates => $terrain");
+      $log->debug("  halfhex primary   $coordinates => $terrain");
     } elsif ($random < 5) {
       $terrain = one($secondary{$primary});
-      verbose("  halfhex secondary $coordinates => $terrain");
+      $log->debug("  halfhex secondary $coordinates => $terrain");
     } else {
       $terrain = one($tertiary{$primary});
-      verbose("  halfhex tertiary  $coordinates => $terrain");
+      $log->debug("  halfhex tertiary  $coordinates => $terrain");
     }
     $world{$coordinates} = $terrain;
   }
@@ -359,7 +354,7 @@ sub seed_region {
   my ($seeds, $terrain) = @_;
   my $terrain_above;
   for my $hex (@$seeds) {
-    verbose("seed_region (" . $hex->[0] . "," . $hex->[1] . ") with $terrain");
+    $log->debug("seed_region (" . $hex->[0] . "," . $hex->[1] . ") with $terrain");
     generate_region($hex->[0], $hex->[1], $terrain);
     populate_region($hex, $terrain);
     my $random = rand 12;
@@ -369,16 +364,16 @@ sub seed_region {
     $terrain = $terrain_above if $hex->[0] == 1 and $terrain_above;
     if ($random < 6) {
       $next = one($primary{$terrain});
-      verbose("picked primary $next");
+      $log->debug("picked primary $next");
     } elsif ($random < 9) {
       $next = one($secondary{$terrain});
-      verbose("picked secondary $next");
+      $log->debug("picked secondary $next");
     } elsif ($random < 11) {
       $next = one($tertiary{$terrain});
-      verbose("picked tertiary $next");
+      $log->debug("picked tertiary $next");
     } else {
       $next = one($wildcard{$terrain});
-      verbose("picked wildcard $next");
+      $log->debug("picked wildcard $next");
     }
     $terrain_above = $terrain if $hex->[0] == 1;
     die "Terrain lacks reverse_lookup: $next\n" unless $reverse_lookup{$next};
@@ -388,7 +383,7 @@ sub seed_region {
 
 sub agriculture {
   for my $hex (@needs_fields) {
-    verbose("looking to plant fields near " . Game::TextMapper::Point::coord($hex->[0], $hex->[1]));
+    $log->debug("looking to plant fields near " . Game::TextMapper::Point::coord($hex->[0], $hex->[1]));
     my $delta = [[[-1,  0], [ 0, -1], [+1,  0], [+1, +1], [ 0, +1], [-1, +1]],  # x is even
 		 [[-1, -1], [ 0, -1], [+1, -1], [+1,  0], [ 0, +1], [-1,  0]]]; # x is odd
     my @plains;
@@ -398,9 +393,9 @@ sub agriculture {
       my $coordinates = Game::TextMapper::Point::coord($x, $y);
       if ($world{$coordinates}) {
 	my ($color, $terrain) = split(' ', $world{$coordinates}, 2);
-	verbose("  $coordinates is " . $world{$coordinates} . " ie. " . $reverse_lookup{$world{$coordinates}});
+	$log->debug("  $coordinates is " . $world{$coordinates} . " ie. " . $reverse_lookup{$world{$coordinates}});
 	if ($reverse_lookup{$world{$coordinates}} eq 'plains') {
-	  verbose("   $coordinates is a candidate");
+	  $log->debug("   $coordinates is a candidate");
 	  push(@plains, $coordinates);
 	}
       }
@@ -408,15 +403,14 @@ sub agriculture {
     next unless @plains;
     my $target = one(@plains);
     $world{$target} = one('light-soil fields', 'soil fields');
-    verbose(" $target planted with " . $world{$target});
+    $log->debug(" $target planted with " . $world{$target});
   }
 }
 
 sub generate_map {
-  my ($bw, $width, $height, $log_) = @_;
+  my ($bw, $width, $height) = @_;
   $width = 20 if not defined $width or $width < 1 or $width > 100;
   $height = 10 if not defined $height or $height < 1 or $height > 100;
-  $log = $log_;
 
   my $seeds;
   for (my $y = 1; $y < $height + 3; $y += 5) {

@@ -26,13 +26,14 @@ This is an unfinished idea.
 =cut
 
 package Game::TextMapper::Schroeder::Archipelago;
+use Game::TextMapper::Log;
 use Modern::Perl '2018';
 use Mojo::Base -base;
 use Role::Tiny::With;
 with 'Game::TextMapper::Schroeder::Base';
 use List::Util qw'shuffle min max';
 
-my $log;
+my $log = Game::TextMapper::Log->get;
 
 has 'bottom' => 0;
 has 'top' => 10;
@@ -122,7 +123,6 @@ sub generate_map {
   $self->bottom(shift // $self->bottom);
   my $seed = shift||time;
   my $url = shift;
-  $log = shift;
   my $step = shift||0;
 
   # For documentation purposes, I want to be able to set the pseudo-random

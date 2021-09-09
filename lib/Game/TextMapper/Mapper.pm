@@ -36,7 +36,7 @@ L<Game::TextMapper::Mapper::Square>
 =cut
 
 package Game::TextMapper::Mapper;
-
+use Game::TextMapper::Log;
 use Modern::Perl '2018';
 use Mojo::UserAgent;
 use Mojo::Base -base;
@@ -61,9 +61,9 @@ has 'license' => '';
 has 'other' => sub { [] };
 has 'url' => '';
 has 'offset' => sub { [] };
+has 'dist_dir';
 
-my $log;
-my $contrib;
+my $log = Game::TextMapper::Log->get;
 
 sub example {
   return <<"EOT";
@@ -93,9 +93,7 @@ EOT
 }
 
 sub initialize {
-  my ($self, $map, $log_, $contrib_) = @_;
-  $log = $log_;
-  $contrib = $contrib_;
+  my ($self, $map) = @_;
   $map =~ s/&#45;/-/g; # -- are invalid in source comments...
   $self->map($map);
   $self->process(split(/\r?\n/, $map));
@@ -167,16 +165,11 @@ sub process {
       } elsif (not $self->seen->{$1}) {
 	my $location = $1;
 	$self->seen->{$location} = 1;
-	if (index($location, '/') == -1) {
-	  # without a slash, it could be a file from $contrib
-	  my $path = Mojo::File->new($contrib, $location);
-	  if (-f $path) {
-	    $log->debug("Reading $location");
-	    $self->process(split(/\n/, decode_utf8($path->slurp())));
-	  } else {
-	    $log->warn("No library '$location' in $contrib");
-	    push(@{$self->messages}, "No library called $location is available on the server");
-	  }
+	my $path = Mojo::File->new($self->dist_dir, $location);
+	if (index($location, '/') == -1 and -f $path) {
+	  # without a slash, it could be a file from dist_dir
+	  $log->debug("Reading $location");
+	  $self->process(split(/\n/, decode_utf8($path->slurp())));
 	} elsif ($location =~ /^https?:/) {
 	  $log->debug("Getting $location");
 	  my $ua = Mojo::UserAgent->new;
@@ -184,10 +177,23 @@ sub process {
 	  if ($response->is_success) {
 	    $self->process(split(/\n/, $response->text));
 	  } else {
-	    push(@{$self->messages}, $response->status_line);
+	    push(@{$self->messages}, "Getting $location: " . $response->status_line);
+	  }
+	} elsif ($self->dist_dir =~ /^https?:/) {
+	  my $url = $self->dist_dir;
+	  $url .= '/' unless $url =~ /\/$/;
+	  $url .= $location;
+	  $log->debug("Getting $url");
+	  my $ua = Mojo::UserAgent->new;
+	  my $response = $ua->get($url)->result;
+	  if ($response->is_success) {
+	    $self->process(split(/\n/, $response->text));
+	  } else {
+	    push(@{$self->messages}, "Getting $url: " . $response->status_line);
 	  }
 	} else {
-	  push(@{$self->messages}, "Library '$location' is must be a filename or a HTTP/HTTPS URL");
+	  $log->warn("No library '$location' in " . $self->dist_dir);
+	  push(@{$self->messages}, "Library '$location' is must be an existing file on the server or a HTTP/HTTPS URL");
 	}
       }
     } else {

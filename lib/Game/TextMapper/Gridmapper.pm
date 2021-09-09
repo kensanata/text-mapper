@@ -34,16 +34,15 @@ drops the extra rooms.
 =cut
 
 package Game::TextMapper::Gridmapper;
-
+use Game::TextMapper::Log;
 use Game::TextMapper::Constants qw($dx $dy);
-
 use Modern::Perl '2018';
 use List::Util qw'shuffle none any min max all';
 use List::MoreUtils qw'pairwise';
 use Mojo::Util qw(url_escape);
 use Mojo::Base -base;
 
-my $log;
+my $log = Game::TextMapper::Log->get;
 
 # This is the meta grid for the geomorphs. Normally this is (3,3) for simple
 # dungeons. We need to recompute these when smashing geomorphs together.
@@ -87,7 +86,6 @@ sub generate_map {
   my $pillars = shift;
   my $n = shift;
   my $caves = shift;
-  $log = shift;
   $self->init;
   my $rooms = [map { $self->generate_room($_, $pillars, $caves) } (1 .. $n)];
   my ($shape, $stairs) = $self->shape(scalar(@$rooms));

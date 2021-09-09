@@ -31,11 +31,12 @@ are not themselves mountains or a deserts. Rivers end in swamps.
 =cut
 
 package Game::TextMapper::Apocalypse;
+use Game::TextMapper::Log;
 use Modern::Perl '2018';
 use List::Util qw(shuffle any none);
 use Mojo::Base -base;
 
-my $log;
+my $log = Game::TextMapper::Log->get;
 
 has 'rows' => 10;
 has 'cols' => 20;
@@ -47,7 +48,6 @@ my @settlements = qw(ruin fort cave);
 
 sub generate_map {
   my $self = shift;
-  $log = shift;
   my @coordinates = shuffle(0 .. $self->rows * $self->cols - 1);
   my $seeds = $self->rows * $self->cols / $self->region_size;
   my $tiles = [];
