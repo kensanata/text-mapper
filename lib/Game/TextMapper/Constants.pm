@@ -13,6 +13,23 @@
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
+=encoding utf8
+
+=head1 NAME
+
+Game::TextMapper::Constants - width and height for map tiles
+
+=head1 SYNOPSIS
+
+    use Game::TextMapper::Constants qw($dx $dy);
+
+=head1 DESCRIPTION
+
+This class defines C<$dx> (100) and C<$dy> (100×√3), the two important lengths
+for hex tiles (used in the SVG output).
+
+=cut
+
 package Game::TextMapper::Constants;
 require Exporter;
 our @ISA = qw(Exporter);

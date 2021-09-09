@@ -19,12 +19,24 @@
 
 Game::TextMapper::Square - a square on a map
 
+=head1 SYNOPSIS
+
+    use Modern::Perl;
+    use Game::TextMapper::Square;
+    my $square = Game::TextMapper::Square->new(x => 1, y => 1, z => 0);
+    say $square->svg_region('', [0]);
+    # <rect id="square110"  x="86.6025403784439" y="86.6025403784439" width="173.205080756888" height="173.205080756888" />
+
 =head1 DESCRIPTION
 
 This class holds information about a square region: coordinates, a label, and
 types. Types are the kinds of symbols that can be found in the region: a keep, a
 tree, a mountain. They correspond to SVG definitions. The class knows how to
 draw a SVG rectangle at the correct coordinates using these definitions.
+
+=head1 SEE ALSO
+
+L<Game::TextMapper::Constants>
 
 =cut
 
