@@ -21,8 +21,4 @@ our @EXPORT_OK = qw($dx $dy);
 our $dx = 100;
 our $dy = 100*sqrt(3);
 
-our $log;
-our $debug;
-our $contrib;
-
 1;

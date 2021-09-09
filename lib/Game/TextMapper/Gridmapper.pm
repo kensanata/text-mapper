@@ -44,7 +44,6 @@ use Mojo::Util qw(url_escape);
 use Mojo::Base -base;
 
 my $log;
-my $contrib;
 
 # This is the meta grid for the geomorphs. Normally this is (3,3) for simple
 # dungeons. We need to recompute these when smashing geomorphs together.
@@ -89,7 +88,6 @@ sub generate_map {
   my $n = shift;
   my $caves = shift;
   $log = shift;
-  $contrib = shift;
   $self->init;
   my $rooms = [map { $self->generate_room($_, $pillars, $caves) } (1 .. $n)];
   my ($shape, $stairs) = $self->shape(scalar(@$rooms));
@@ -1093,7 +1091,7 @@ sub to_text {
   my $self = shift;
   # Don't forget the border of two tiles.
   my $tiles = shift;
-  my $text = "include $contrib/gridmapper.txt\n";
+  my $text = "include gridmapper.txt\n";
   for my $x (0 .. $self->row - 1) {
     for my $y (0 .. $self->col - 1) {
       my $tile = $tiles->[$x + $y * $self->row];

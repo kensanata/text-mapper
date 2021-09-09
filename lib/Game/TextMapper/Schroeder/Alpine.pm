@@ -52,7 +52,6 @@ with 'Game::TextMapper::Schroeder::Base';
 use List::Util 'shuffle';
 
 my $log;
-my $contrib;
 
 has 'steepness';
 has 'peaks';
@@ -792,7 +791,6 @@ sub generate_map {
   my $seed = shift||time;
   my $url = shift;
   $log = shift;
-  $contrib = shift;
   my $step = shift||0;
 
   # For documentation purposes, I want to be able to set the pseudo-random
@@ -840,7 +838,7 @@ sub generate_map {
   push(@lines, map { "@$_ canyon" } @$canyons);
   push(@lines, map { "@$_ river" } @$rivers);
   push(@lines, map { "$_ trail" } @$trails);
-  push(@lines, "include $contrib/gnomeyland.txt");
+  push(@lines, "include gnomeyland.txt");
 
   # when documenting or debugging, add some more lines at the end
   if ($step > 0) {

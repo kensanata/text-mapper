@@ -35,7 +35,6 @@ use List::Util qw(shuffle max any);
 use Mojo::Base -base;
 
 my $log;
-my $contrib;
 
 has 'rows' => 10;
 has 'cols' => 8;
@@ -44,7 +43,6 @@ has 'digraphs';
 sub generate_map {
   my $self = shift;
   $log = shift;
-  $contrib = shift;
   $self->digraphs($self->compute_digraphs);
   # coordinates are an index into the system array
   my @coordinates = (0 .. $self->rows * $self->cols - 1);
@@ -388,7 +386,7 @@ sub to_text {
       }
     }
   }
-  $text .= join("\n", @$comms, "\ninclude $contrib/traveller.txt\n");
+  $text .= join("\n", @$comms, "\ninclude traveller.txt\n");
   return $text;
 }
 

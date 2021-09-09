@@ -34,7 +34,6 @@ use Game::TextMapper::Point;
 use Modern::Perl '2018';
 
 my $log;
-my $contrib;
 
 my %world = ();
 
@@ -414,11 +413,10 @@ sub agriculture {
 }
 
 sub generate_map {
-  my ($bw, $width, $height, $log_, $contrib_) = @_;
+  my ($bw, $width, $height, $log_) = @_;
   $width = 20 if not defined $width or $width < 1 or $width > 100;
   $height = 10 if not defined $height or $height < 1 or $height > 100;
   $log = $log_;
-  $contrib = $contrib_;
 
   my $seeds;
   for (my $y = 1; $y < $height + 3; $y += 5) {
@@ -454,7 +452,7 @@ sub generate_map {
   }
 
   return join("\n", map { $_ . " " . $world{$_} } sort keys %world) . "\n"
-    . "include $contrib/gnomeyland.txt\n";
+    . "include gnomeyland.txt\n";
 }
 
 1;

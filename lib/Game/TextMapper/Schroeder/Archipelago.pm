@@ -33,7 +33,6 @@ with 'Game::TextMapper::Schroeder::Base';
 use List::Util qw'shuffle min max';
 
 my $log;
-my $contrib;
 
 has 'bottom' => 0;
 has 'top' => 10;
@@ -124,7 +123,6 @@ sub generate_map {
   my $seed = shift||time;
   my $url = shift;
   $log = shift;
-  $contrib = shift;
   my $step = shift||0;
 
   # For documentation purposes, I want to be able to set the pseudo-random
@@ -153,7 +151,7 @@ sub generate_map {
   my @lines;
   push(@lines, map { $_ . " " . $self->world->{$_} } sort keys %{$self->world});
   # push(@lines, map { "$_ trail" } @$trails);
-  push(@lines, "include $contrib/gnomeyland.txt");
+  push(@lines, "include gnomeyland.txt");
 
   # when documenting or debugging, add some more lines at the end
   if ($step > 0) {

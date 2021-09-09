@@ -36,7 +36,6 @@ use List::Util qw(shuffle any none);
 use Mojo::Base -base;
 
 my $log;
-my $contrib;
 
 has 'rows' => 10;
 has 'cols' => 20;
@@ -49,7 +48,6 @@ my @settlements = qw(ruin fort cave);
 sub generate_map {
   my $self = shift;
   $log = shift;
-  $contrib = shift;
   my @coordinates = shuffle(0 .. $self->rows * $self->cols - 1);
   my $seeds = $self->rows * $self->cols / $self->region_size;
   my $tiles = [];
@@ -191,7 +189,7 @@ sub to_text {
   for my $river (@$rivers) {
     $text .= $self->xy($river) . " river\n" if ref($river) and @$river > 1;
   }
-  $text .= "\ninclude $contrib/apocalypse.txt\n";
+  $text .= "\ninclude apocalypse.txt\n";
   return $text;
 }
 

@@ -87,7 +87,7 @@ sub example {
 0205-0103-0202-0303-0402 road
 0101-0203 river
 0401-0303-0403 border
-include $contrib/default.txt
+include default.txt
 license <text>Public Domain</text>
 EOT
 }
@@ -167,16 +167,17 @@ sub process {
       } elsif (not $self->seen->{$1}) {
 	my $location = $1;
 	$self->seen->{$location} = 1;
-	if (-f $location) {
-	  my $path = Mojo::File->new($location);
-	  if ($path->dirname eq $contrib) {
+	if (index($location, '/') == -1) {
+	  # without a slash, it could be a file from $contrib
+	  my $path = Mojo::File->new($contrib, $location);
+	  if (-f $path) {
 	    $log->debug("Reading $location");
-	    $self->process(split(/\n/, read_text($location)));
+	    $self->process(split(/\n/, decode_utf8($path->slurp())));
 	  } else {
-	    $log->warn("Not reading $location: only $contrib is allowed");
-	    push(@{$self->messages}, "File includes must be from $contrib");
+	    $log->warn("No library '$location' in $contrib");
+	    push(@{$self->messages}, "No library called $location is available on the server");
 	  }
-	} else {
+	} elsif ($location =~ /^https?:/) {
 	  $log->debug("Getting $location");
 	  my $ua = Mojo::UserAgent->new;
 	  my $response = $ua->get($location)->result;
@@ -185,6 +186,8 @@ sub process {
 	  } else {
 	    push(@{$self->messages}, $response->status_line);
 	  }
+	} else {
+	  push(@{$self->messages}, "Library '$location' is must be a filename or a HTTP/HTTPS URL");
 	}
       }
     } else {

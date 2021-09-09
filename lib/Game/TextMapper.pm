@@ -69,7 +69,7 @@ EOF
 
 sub run {
   my ($self, @args) = @_;
-  print Game::TextMapper::Smale::generate_map(undef, undef, undef, $log, $contrib);
+  print Game::TextMapper::Smale::generate_map(undef, undef, undef, $log);
 }
 
 package Game::TextMapper;
@@ -177,7 +177,7 @@ get '/random' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  $c->render(template => 'edit', map => Game::TextMapper::Smale::generate_map($bw, $width, $height, $log, $contrib));
+  $c->render(template => 'edit', map => Game::TextMapper::Smale::generate_map($bw, $width, $height, $log));
 };
 
 get '/smale' => sub {
@@ -186,10 +186,10 @@ get '/smale' => sub {
   my $width = $c->param('width');
   my $height = $c->param('height');
   if ($c->stash('format')||'' eq 'txt') {
-    $c->render(text => Game::TextMapper::Smale::generate_map(undef, $width, $height, $log, $contrib));
+    $c->render(text => Game::TextMapper::Smale::generate_map(undef, $width, $height, $log));
   } else {
     $c->render(template => 'edit',
-	       map => Game::TextMapper::Smale::generate_map($bw, $width, $height, $log, $contrib));
+	       map => Game::TextMapper::Smale::generate_map($bw, $width, $height, $log));
   }
 };
 
@@ -198,7 +198,7 @@ get '/smale/random' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  my $map = Game::TextMapper::Smale::generate_map($bw, $width, $height, $log, $contrib);
+  my $map = Game::TextMapper::Smale::generate_map($bw, $width, $height, $log);
   my $svg = Game::TextMapper::Mapper::Hex->new()
       ->initialize($map, $log, $contrib)
       ->svg();
@@ -210,7 +210,7 @@ get '/smale/random/text' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  my $text = Game::TextMapper::Smale::generate_map($bw, $width, $height, $log, $contrib);
+  my $text = Game::TextMapper::Smale::generate_map($bw, $width, $height, $log);
   $c->render(text => $text, format => 'txt');
 };
 
@@ -233,7 +233,6 @@ sub alpine_map {
 		$seed,
 		$url,
 		$log,
-		$contrib,
 		$step,
       );
   my $type = $c->param('type') // 'hex';
@@ -450,7 +449,6 @@ sub island_map {
 		$seed,
 		$url,
 		$log,
-		$contrib,
 		$step,
       );
   my $type = $c->param('type') // 'hex';
@@ -505,7 +503,6 @@ sub archipelago_map {
 		$seed,
 		$url,
 		$log,
-		$contrib,
 		$step,
       );
   my $type = $c->param('type') // 'hex';
@@ -552,7 +549,7 @@ sub gridmapper_map {
   my $caves = $c->param('caves') // 0;
   srand($seed);
   return Game::TextMapper::Gridmapper->new()
-      ->generate_map($pillars, $rooms, $caves, $log, $contrib);
+      ->generate_map($pillars, $rooms, $caves, $log);
 }
 
 get '/gridmapper' => sub {
@@ -584,7 +581,7 @@ sub apocalypse_map {
   my $seed = $c->param('seed') || int(rand(1000000000));
   srand($seed);
   return Game::TextMapper::Apocalypse->new()
-      ->generate_map($log, $contrib);
+      ->generate_map($log);
 }
 
 get '/apocalypse' => sub {
@@ -617,7 +614,7 @@ sub star_map {
   srand($seed);
   return Game::TextMapper::Traveller
       ->with_roles('Game::TextMapper::Schroeder::Hex')->new()
-      ->generate_map($log, $contrib);
+      ->generate_map($log);
 }
 
 get '/traveller' => sub {
@@ -657,7 +654,6 @@ get '/help' => sub {
   seek(DATA,0,0);
   local $/ = undef;
   my $pod = <DATA>;
-  $pod =~ s/\$contrib/$contrib/g;
   $pod =~ s/=head1 NAME\n.*=head1 DESCRIPTION/=head1 Text Mapper/gs;
   my $parser = Pod::Simple::HTML->new;
   $parser->html_header_after_title('');
@@ -940,7 +936,7 @@ filename. If a filename, the file must be in the directory named by the
 F<contrib> configuration key, which defaults to the applications F<share>
 directory.
 
-    include $contrib/default.txt
+    include default.txt
     0102 sand
     0103 sand
     0201 sand
@@ -1006,7 +1002,7 @@ that connects to itself. These "closed" lines can have C<fill> in
 their path attributes. In the following example, the oasis is
 surrounded by a larger green area.
 
-    include $contrib/default.txt
+    include default.txt
     0102 sand
     0103 sand
     0201 sand
