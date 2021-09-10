@@ -1,3 +1,0 @@
-The packages Line and Point cannot be indexed on CPAN because they
-belong to somebody else. Use Game::TextMapper::Line and
-Game::TextMapper::Point?

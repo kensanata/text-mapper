@@ -3,6 +3,7 @@
 
 # files for developers
 ^RELEASE
+^TODO
 \.conf$
 
 # generated files
