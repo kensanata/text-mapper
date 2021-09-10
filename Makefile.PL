@@ -51,9 +51,11 @@ check:
 	find lib -name '*.pm' -exec perl -Ilib -c '{}' ';'
 
 # Assuming you want to run Hex Describe on port 3000 and Face Generator on port
-# 3020, start Text Mapper on port 3010.
+# 3020, start Text Mapper on port 3010. Morbo watche lib and script folders already
+# and changes to share don't require a restart. Since we expect a config file in the
+# current directory, watch it.
 run:
-	morbo --verbose --listen http://*:3010 script/text-mapper --watch script
+	morbo --verbose --listen http://*:3010 script/text-mapper --watch text-mapper.conf
 EOT
   return join "\n", @ret;
 }
