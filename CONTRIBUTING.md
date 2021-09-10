@@ -1,4 +1,4 @@
-# Contributing to Phoebe
+# Contributing to Text Mapper
 
 The simplest way to contribute is to contribute new libraries!
 
@@ -9,8 +9,8 @@ take a look at the
 
 I prefer pulling changes from public git repositories, no matter where
 they are hosted, but [patches via email](https://git-send-email.io/),
-or [GitHub pull requests](https://github.com/kensanata/phoebe) work as
-well.
+or [GitHub pull requests](https://github.com/kensanata/text-mapper)
+work as well.
 
 As for issues, your options are:
 
@@ -18,11 +18,27 @@ As for issues, your options are:
 
 * send a patch for the `TODO` file
 
-* create a page on my [Software Wiki](https://alexschroeder.ch/software/Text_Mapper)
+* create an issue [on CPAN](https://rt.cpan.org/Public/Dist/Display.html?Name=Game-TextMapper)
+
+* create an issue [on my Software Wiki](https://alexschroeder.ch/software/Text_Mapper)
 
 * create an issue [on GitHub](https://github.com/kensanata/text-mapper/issues)
+
+## User visible changes
+
+Make sure you update the Changes file. It’s the first thing people see
+[on CPAN](https://metacpan.org/dist/Game-TextMapper).
 
 ## Commit messages
 
 Use the [packaging] tag to indicate changes that package maintainers
 must know about.
+
+## Code of conduct
+
+From the [Universal Declaration of Human
+Rights](https://www.un.org/en/about-us/universal-declaration-of-human-rights):
+
+“All human beings are born free and equal in dignity and rights. They
+are endowed with reason and conscience and should act towards one
+another in a spirit of brotherhood.”

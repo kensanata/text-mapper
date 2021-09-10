@@ -31,5 +31,5 @@ If you’re happy with the results:
 
 ```
 perl Makefile.PL && make && make dist
-cpan-upload -u SCHROEDER Game-TextMapper-1.tar.gz
+cpan-upload -u SCHROEDER Game-TextMapper-1.01.tar.gz
 ```
