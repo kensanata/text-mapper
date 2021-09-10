@@ -15,62 +15,8 @@
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package Game::TextMapper;
-use Modern::Perl '2018';
 
-our $VERSION = 1.00;
-
-package Mojolicious::Command::render;
-use Modern::Perl '2018';
-use Mojo::Base 'Mojolicious::Command';
-use File::ShareDir 'dist_dir';
-
-has description => 'Render map from STDIN';
-
-has usage => <<EOF;
-Usage example:
-
-    text-mapper render < share/forgotten-depths.txt > forgotten-depths.svg
-
-This reads a map description from STDIN and prints the resulting SVG map to
-STDOUT.
-EOF
-
-sub run {
-  my ($self, @args) = @_;
-  local $/ = undef;
-  my $dist_dir = $self->app->config('contrib') // dist_dir('Game-TextMapper');
-  my $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
-  $mapper->initialize(<STDIN>);
-  print $mapper->svg;
-}
-
-package Mojolicious::Command::random;
-
-use Game::TextMapper::Smale;
-
-use Modern::Perl '2018';
-use Mojo::Base 'Mojolicious::Command';
-
-has description => 'Print a random map to STDOUT';
-
-has usage => <<EOF;
-Usage example:
-perl text-mapper.pl random > map.txt
-
-This prints a random map description to STDOUT.
-
-You can also pipe this:
-
-    text-mapper random | text-mapper render > map.svg
-
-EOF
-
-sub run {
-  my ($self, @args) = @_;
-  print Game::TextMapper::Smale::generate_map();
-}
-
-package Game::TextMapper;
+our $VERSION = 1.01;
 
 use Game::TextMapper::Log;
 use Game::TextMapper::Point;
@@ -87,6 +33,8 @@ use Game::TextMapper::Traveller;
 
 use Modern::Perl '2018';
 use Mojolicious::Lite;
+use Mojolicious::Command::render;
+use Mojolicious::Command::random;
 use Mojo::DOM;
 use Mojo::Util qw(url_escape xml_escape);
 use File::ShareDir 'dist_dir';
