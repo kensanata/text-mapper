@@ -48,7 +48,6 @@ $t->get_ok('/smale/random')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
     ->element_exists('g#regions polygon#hex010100');
 
-
 $t->get_ok('/alpine/random')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')

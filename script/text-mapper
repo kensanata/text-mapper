@@ -36,7 +36,8 @@ GNU Affero General Public License
 
 =cut
 
-use Modern::Perl;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-require Game::TextMapper;
+my $res = require Game::TextMapper
+    or not defined $res and die "Cannot load Game::TextMapper: $!"
+    or not $res and die "Game::TextMapper did not return a true value\n";

@@ -12,11 +12,17 @@
 #
 # You should have received a copy of the GNU Affero General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
+
 =encoding utf8
 
 =head1 NAME
 
 Game::TextMapper::Smale - generate fantasy wilderness maps
+
+=head1 SYNOPSIS
+
+    my $text = Game::TextMapper::Smale->new
+        ->generate_map($width, $height, $bw);
 
 =head1 DESCRIPTION
 
@@ -25,12 +31,19 @@ blog posts at L<http://www.welshpiper.com/hex-based-campaign-design-part-1/> and
 L<http://www.welshpiper.com/hex-based-campaign-design-part-2/> for more
 information.
 
+=head1 METHODS
+
+Note that this module acts as a class with the C<generate_map> method, but none
+of the other subroutines defined are actual methods. They don't take a C<$self>
+argument.
+
 =cut
 
 package Game::TextMapper::Smale;
 use Game::TextMapper::Log;
 use Game::TextMapper::Point;
 use Modern::Perl '2018';
+use Mojo::Base -base;
 
 my $log = Game::TextMapper::Log->get;
 
@@ -407,8 +420,16 @@ sub agriculture {
   }
 }
 
+=head2 generate_map WIDTH, HEIGHT, BW
+
+WIDTH and HEIGHT default to 20×10.
+
+BW stands for "black & white", i.e. a true value skips background colours.
+
+=cut
+
 sub generate_map {
-  my ($bw, $width, $height) = @_;
+  my ($self, $width, $height, $bw) = @_;
   $width = 20 if not defined $width or $width < 1 or $width > 100;
   $height = 10 if not defined $height or $height < 1 or $height > 100;
 
@@ -433,7 +454,6 @@ sub generate_map {
     delete $world{$coordinates} if $1 < 1 or $2 < 1;
     delete $world{$coordinates} if $1 > $width or $2 > $height;
   }
-
   if ($bw) {
     for my $coordinates (keys %world) {
       my ($color, $rest) = split(' ', $world{$coordinates}, 2);
@@ -448,5 +468,18 @@ sub generate_map {
   return join("\n", map { $_ . " " . $world{$_} } sort keys %world) . "\n"
     . "include gnomeyland.txt\n";
 }
+
+=head1 SEE ALSO
+
+Erin D. Smale described this algorithm in two famous blog posts:
+L<http://www.welshpiper.com/hex-based-campaign-design-part-1/> and
+L<http://www.welshpiper.com/hex-based-campaign-design-part-2/>.
+
+The map itself uses the I<Gnomeyland> icons by Gregory B. MacKenzie. These are
+licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License.
+To view a copy of this license, visit
+L<http://creativecommons.org/licenses/by-sa/3.0/>.
+
+=cut
 
 1;

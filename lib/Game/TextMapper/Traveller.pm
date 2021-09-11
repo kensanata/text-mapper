@@ -26,6 +26,8 @@ editions. Trade and communication routes are based on starports, bases, and
 trade codes and jump distance; the potential connections are then winnowed down
 using a minimal spanning tree.
 
+=head1 METHODS
+
 =cut
 
 package Game::TextMapper::Traveller;
@@ -33,12 +35,20 @@ use Game::TextMapper::Log;
 use Modern::Perl '2018';
 use List::Util qw(shuffle max any);
 use Mojo::Base -base;
+use Role::Tiny::With;
+with 'Game::TextMapper::Schroeder::Hex';
 
 my $log = Game::TextMapper::Log->get;
 
 has 'rows' => 10;
 has 'cols' => 8;
 has 'digraphs';
+
+=head2 generate_map
+
+This method takes no arguments. Subsectors are always 8×10.
+
+=cut
 
 sub generate_map {
   my $self = shift;

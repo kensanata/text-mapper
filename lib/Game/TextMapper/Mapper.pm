@@ -30,8 +30,9 @@ use the appropriate class instead of this one.
 
 =head1 SEE ALSO
 
-L<Game::TextMapper::Mapper::Hex>
-L<Game::TextMapper::Mapper::Square>
+L<Game::TextMapper::Mapper::Hex> is for hex maps.
+
+L<Game::TextMapper::Mapper::Square> is for square maps.
 
 =cut
 

@@ -27,8 +27,9 @@ generate the SVG for the entire map.
 
 =head1 SEE ALSO
 
-L<Game::TextMapper::Mapper>
-L<Game::TextMapper::Mapper::Hex>
+This class is derived from L<Game::TextMapper::Mapper>.
+
+L<Game::TextMapper::Mapper::Hex> is a similar class for hex maps.
 
 =cut
 

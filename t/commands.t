@@ -18,15 +18,31 @@ use Test::More;
 use IPC::Open2;
 use Mojo::DOM;
 use Test::Mojo;
+use Mojo::File;
 
 # random
 
-like(qx(script/text-mapper random), qr/^0101/, 'random');
+my $script = Mojo::File->new('script', 'text-mapper');
+like(qx($script random), qr/^0101/, 'random');
+like(qx($script random Game::TextMapper::Smale),
+     qr/^0101/, 'Game::TextMapper::Smale');
+like(qx($script random Game::TextMapper::Apocalypse),
+     qr/^0101/, 'Game::TextMapper::Apocalypse');
+like(qx($script random Game::TextMapper::Traveller),
+     qr/^0101/, 'Game::TextMapper::Traveller');
+like(qx($script random Game::TextMapper::Schroeder::Alpine --role Game::TextMapper::Schroeder::Hex),
+     qr/^0101/, 'Game::TextMapper::Schroeder::Alpine (hex)');
+like(qx($script random Game::TextMapper::Schroeder::Alpine --role Game::TextMapper::Schroeder::Square),
+     qr/^0101/, 'Game::TextMapper::Schroeder::Alpine (square)');
+like(qx($script random Game::TextMapper::Schroeder::Island --role Game::TextMapper::Schroeder::Hex),
+     qr/^0101/, 'Game::TextMapper::Schroeder::Island (hex)');
+like(qx($script random Game::TextMapper::Schroeder::Island --role Game::TextMapper::Schroeder::Square),
+     qr/^0101/, 'Game::TextMapper::Schroeder::Island (square)');
 
 # render
 
 # setup
-my $pid = open2(my $out, my $in, 'script/text-mapper', 'render');
+my $pid = open2(my $out, my $in, $script, 'render');
 print $in "0101 forest\n";
 close($in);
 # read and parse output

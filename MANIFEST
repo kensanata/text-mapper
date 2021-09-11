@@ -1,6 +1,8 @@
 Changes
 lib/Game/TextMapper.pm
 lib/Game/TextMapper/Apocalypse.pm
+lib/Game/TextMapper/Command/random.pm
+lib/Game/TextMapper/Command/render.pm
 lib/Game/TextMapper/Constants.pm
 lib/Game/TextMapper/Gridmapper.pm
 lib/Game/TextMapper/Hex.pm
@@ -21,8 +23,6 @@ lib/Game/TextMapper/Schroeder/Square.pm
 lib/Game/TextMapper/Smale.pm
 lib/Game/TextMapper/Square.pm
 lib/Game/TextMapper/Traveller.pm
-lib/Mojolicious/Command/random.pm
-lib/Mojolicious/Command/render.pm
 LICENSE
 Makefile.PL
 MANIFEST			This list of files

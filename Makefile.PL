@@ -48,7 +48,7 @@ sub postamble {
   my @ret = File::ShareDir::Install::postamble($self);
   push @ret, <<'EOT';
 check:
-	find lib -name '*.pm' -exec perl -Ilib -c '{}' ';'
+	find lib -name '*.pm' -exec perl -Ilib -c '{}' ';' -exec podchecker '{}' ';'
 
 # Assuming you want to run Hex Describe on port 3000 and Face Generator on port
 # 3020, start Text Mapper on port 3010. Morbo watche lib and script folders already

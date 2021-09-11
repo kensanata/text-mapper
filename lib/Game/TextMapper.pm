@@ -33,8 +33,6 @@ use Game::TextMapper::Traveller;
 
 use Modern::Perl '2018';
 use Mojolicious::Lite;
-use Mojolicious::Command::render;
-use Mojolicious::Command::random;
 use Mojo::DOM;
 use Mojo::Util qw(url_escape xml_escape);
 use File::ShareDir 'dist_dir';
@@ -42,6 +40,9 @@ use Pod::Simple::HTML;
 use Pod::Simple::Text;
 use List::Util qw(none);
 use Cwd;
+
+# Commands for the command line!
+push @{app->commands->namespaces}, 'Game::TextMapper::Command';
 
 # Change scheme if "X-Forwarded-Proto" header is set (presumably to HTTPS)
 app->hook(before_dispatch => sub {
@@ -123,7 +124,7 @@ get '/random' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  $c->render(template => 'edit', map => Game::TextMapper::Smale::generate_map($bw, $width, $height));
+  $c->render(template => 'edit', map => Game::TextMapper::Smale->new->generate_map($width, $height, $bw));
 };
 
 get '/smale' => sub {
@@ -132,10 +133,10 @@ get '/smale' => sub {
   my $width = $c->param('width');
   my $height = $c->param('height');
   if ($c->stash('format')||'' eq 'txt') {
-    $c->render(text => Game::TextMapper::Smale::generate_map(undef, $width, $height));
+    $c->render(text => Game::TextMapper::Smale->new->generate_map($width, $height));
   } else {
     $c->render(template => 'edit',
-	       map => Game::TextMapper::Smale::generate_map($bw, $width, $height));
+	       map => Game::TextMapper::Smale->new->generate_map($width, $height, $bw));
   }
 };
 
@@ -144,7 +145,7 @@ get '/smale/random' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  my $map = Game::TextMapper::Smale::generate_map($bw, $width, $height);
+  my $map = Game::TextMapper::Smale->new->generate_map($width, $height, $bw);
   my $svg = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir)
       ->initialize($map)
       ->svg();
@@ -156,7 +157,7 @@ get '/smale/random/text' => sub {
   my $bw = $c->param('bw');
   my $width = $c->param('width');
   my $height = $c->param('height');
-  my $text = Game::TextMapper::Smale::generate_map($bw, $width, $height);
+  my $text = Game::TextMapper::Smale->new->generate_map($width, $height, $bw);
   $c->render(text => $text, format => 'txt');
 };
 
@@ -555,9 +556,7 @@ sub star_map {
   my $c = shift;
   my $seed = $c->param('seed') || int(rand(1000000000));
   srand($seed);
-  return Game::TextMapper::Traveller
-      ->with_roles('Game::TextMapper::Schroeder::Hex')->new()
-      ->generate_map();
+  return Game::TextMapper::Traveller->new->generate_map;
 }
 
 get '/traveller' => sub {

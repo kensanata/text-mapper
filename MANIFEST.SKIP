@@ -2,6 +2,7 @@
 ^MANIFEST\.SKIP
 
 # files for developers
+^CONTRIBUTING
 ^RELEASE
 ^TODO
 \.conf$

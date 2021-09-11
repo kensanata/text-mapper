@@ -1,5 +1,7 @@
 # What to do for a release?
 
+Run `make check`.
+
 Update `Changes` with user-visible changes.
 
 Check the copyright year in the `LICENSE`.

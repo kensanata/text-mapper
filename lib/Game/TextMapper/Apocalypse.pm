@@ -28,6 +28,8 @@ Settlements are placed at random.
 Every mountain region is the source of a river. Rivers flow through regions that
 are not themselves mountains or a deserts. Rivers end in swamps.
 
+=head1 METHODS
+
 =cut
 
 package Game::TextMapper::Apocalypse;
@@ -45,6 +47,13 @@ has 'settlement_chance' => 0.1;
 
 my @tiles = qw(forest desert mountain jungle swamp grass);
 my @settlements = qw(ruin fort cave);
+
+=head2 generate_map
+
+This method takes no arguments. Maps are always 20×10; region always 5 hexes and
+there is a 10% chance for settlements.
+
+=cut
 
 sub generate_map {
   my $self = shift;
