@@ -20,42 +20,60 @@ use Mojo::DOM;
 use Test::Mojo;
 use Mojo::File;
 
+my $script = Mojo::File->new('script', 'text-mapper');
+
 # random
 
-my $script = Mojo::File->new('script', 'text-mapper');
-like(qx($script random), qr/^0101/, 'random');
-like(qx($script random Game::TextMapper::Smale),
-     qr/^0101/, 'Game::TextMapper::Smale');
-like(qx($script random Game::TextMapper::Apocalypse),
-     qr/^0101/, 'Game::TextMapper::Apocalypse');
-like(qx($script random Game::TextMapper::Traveller),
-     qr/^0101/, 'Game::TextMapper::Traveller');
-like(qx($script random Game::TextMapper::Schroeder::Alpine --role Game::TextMapper::Schroeder::Hex),
-     qr/^0101/, 'Game::TextMapper::Schroeder::Alpine (hex)');
-like(qx($script random Game::TextMapper::Schroeder::Alpine --role Game::TextMapper::Schroeder::Square),
-     qr/^0101/, 'Game::TextMapper::Schroeder::Alpine (square)');
-like(qx($script random Game::TextMapper::Schroeder::Island --role Game::TextMapper::Schroeder::Hex),
-     qr/^0101/, 'Game::TextMapper::Schroeder::Island (hex)');
-like(qx($script random Game::TextMapper::Schroeder::Island --role Game::TextMapper::Schroeder::Square),
-     qr/^0101/, 'Game::TextMapper::Schroeder::Island (square)');
+sub test_random_map {
+  my $name = shift;
+  my $pid;
+  $pid = open2(my $out, my $in, $^X, $script, 'random', @_);
+  # always slurp!
+  undef $/;
+  my $data = <$out>;
+  like($data, qr/^0101/, $name);
+  # reap zombie and retrieve exit status
+  waitpid($pid, 0);
+  my $child_exit_status = $? >> 8;
+  is($child_exit_status, 0, "Exit status OK");
+}
+
+test_random_map('default');
+test_random_map('Smale', 'Game::TextMapper::Smale');
+test_random_map('Apocalypse', 'Game::TextMapper::Apocalypse');
+test_random_map('Traveller', 'Game::TextMapper::Traveller');
+test_random_map('Alpine (hex)', qw'Game::TextMapper::Schroeder::Alpine --role Game::TextMapper::Schroeder::Hex');
+test_random_map('Alpine (square)', qw'Game::TextMapper::Schroeder::Alpine --role Game::TextMapper::Schroeder::Square');
+test_random_map('Island (hex)', qw'Game::TextMapper::Schroeder::Island --role Game::TextMapper::Schroeder::Hex');
+test_random_map('Island (square)', qw'Game::TextMapper::Schroeder::Island --role Game::TextMapper::Schroeder::Square');
 
 # render
 
-# setup
-my $pid = open2(my $out, my $in, $script, 'render');
-print $in "0101 forest\n";
-close($in);
-# read and parse output
-undef $/;
-my $data = <$out>;
-my $dom = Mojo::DOM->new($data);
+sub test_simple_render {
+  my $map = shift;
+  my $pid;
+  $pid = open2(my $out, my $in, $^X, $script, 'render');
+  print $in $map;
+  close($in);
+  # always slurp!
+  undef $/;
+  my $data = <$out>;
+  my $dom = Mojo::DOM->new($data);
+  for my $test (@_) {
+    $test->($dom)
+  }
+  # reap zombie and retrieve exit status
+  waitpid($pid, 0);
+  my $child_exit_status = $? >> 8;
+  is($child_exit_status, 0, "Exit status OK");
+}
+
 # testing
-ok($dom->at("g#things use"), "things");
-is($dom->at("g#coordinates text")->text, "01.01", "text");
-ok($dom->at("g#regions polygon#hex010100"), "text");
-# reap zombie and retrieve exit status
-waitpid($pid, 0);
-my $child_exit_status = $? >> 8;
-is($child_exit_status, 0, "Exit status OK");
+
+test_simple_render(
+  "0101 forest\n",
+  sub { ok(shift->at("g#things use"), "things") },
+  sub { is(shift->at("g#coordinates text")->text, "01.01", "text") },
+  sub { ok(shift->at("g#regions polygon#hex010100"), "text") });
 
 done_testing;
