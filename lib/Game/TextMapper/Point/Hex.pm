@@ -17,13 +17,13 @@
 
 =head1 NAME
 
-Game::TextMapper::Hex - a hex on a map
+Game::TextMapper::Point::Hex - a hex on a map
 
 =head1 SYNOPSIS
 
     use Modern::Perl;
-    use Game::TextMapper::Hex;
-    my $hex = Game::TextMapper::Hex->new(x => 1, y => 1, z => 0);
+    use Game::TextMapper::Point::Hex;
+    my $hex = Game::TextMapper::Point::Hex->new(x => 1, y => 1, z => 0);
     say $hex->svg_region('', [0]);
     # <polygon id="hex110"  points="50.0,86.6 100.0,173.2 200.0,173.2 250.0,86.6 200.0,0.0 100.0,0.0" />
 
@@ -36,7 +36,7 @@ draw a SVG polygon at the correct coordinates using these definitions.
 
 =cut
 
-package Game::TextMapper::Hex;
+package Game::TextMapper::Point::Hex;
 
 use Game::TextMapper::Constants qw($dx $dy);
 use Game::TextMapper::Point;

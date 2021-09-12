@@ -36,7 +36,7 @@ L<Game::TextMapper::Mapper::Hex> is a similar class for hex maps.
 package Game::TextMapper::Mapper::Square;
 
 use Game::TextMapper::Constants qw($dy);
-use Game::TextMapper::Square;
+use Game::TextMapper::Point::Square;
 use Game::TextMapper::Line::Square;
 
 use Modern::Perl '2018';
@@ -44,7 +44,7 @@ use Mojo::Base 'Game::TextMapper::Mapper';
 
 sub make_region {
   my $self = shift;
-  return Game::TextMapper::Square->new(@_);
+  return Game::TextMapper::Point::Square->new(@_);
 }
 
 sub make_line {

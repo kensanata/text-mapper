@@ -17,13 +17,13 @@
 
 =head1 NAME
 
-Game::TextMapper::Square - a square on a map
+Game::TextMapper::Point::Square - a square on a map
 
 =head1 SYNOPSIS
 
     use Modern::Perl;
-    use Game::TextMapper::Square;
-    my $square = Game::TextMapper::Square->new(x => 1, y => 1, z => 0);
+    use Game::TextMapper::Point::Square;
+    my $square = Game::TextMapper::Point::Square->new(x => 1, y => 1, z => 0);
     say $square->svg_region('', [0]);
     # <rect id="square110"  x="86.6025403784439" y="86.6025403784439" width="173.205080756888" height="173.205080756888" />
 
@@ -40,7 +40,7 @@ L<Game::TextMapper::Constants>
 
 =cut
 
-package Game::TextMapper::Square;
+package Game::TextMapper::Point::Square;
 
 use Game::TextMapper::Constants qw($dx $dy);
 
