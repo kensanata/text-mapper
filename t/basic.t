@@ -62,20 +62,6 @@ $t->get_ok('/alpine/random?type=square')
     ->text_is('g#coordinates text[x=173][y=103]', "01.01")
     ->element_exists('g#regions rect#square010100');
 
-$t->get_ok('/archipelago/random')
-    ->status_is(200)
-    ->element_exists('defs g#Keep rect[fill=white]')
-    ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
-    ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
-
-$t->get_ok('/archipelago/random?type=square')
-    ->status_is(200)
-    ->element_exists('defs g#Keep rect[fill=white]')
-    ->element_exists('g#backgrounds use[x=173][y=173]')
-    ->text_is('g#coordinates text[x=173][y=103]', "01.01")
-    ->element_exists('g#regions rect#square010100');
-
 $t->get_ok('/island/random')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
