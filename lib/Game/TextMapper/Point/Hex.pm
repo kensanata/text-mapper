@@ -34,30 +34,31 @@ types. Types are the kinds of symbols that can be found in the region: a keep, a
 tree, a mountain. They correspond to SVG definitions. The class knows how to
 draw a SVG polygon at the correct coordinates using these definitions.
 
+For attributes and methods, see L<Game::TextMapper::Point>.
+
+=head2 Additional Methods
+
 =cut
 
 package Game::TextMapper::Point::Hex;
 
 use Game::TextMapper::Constants qw($dx $dy);
-use Game::TextMapper::Point;
 
 use Modern::Perl '2018';
 use Mojo::Util qw(url_escape);
 use Encode qw(encode_utf8);
-use Mojo::Base -base;
+use Mojo::Base 'Game::TextMapper::Point';
 
-has 'x';
-has 'y';
-has 'z';
-has 'type';
-has 'label';
-has 'size';
-has 'map';
+=head3 corners
 
-sub str {
-  my $self = shift;
-  return '(' . $self->x . ',' . $self->y . ')';
-}
+Return the relative SVG coordinates of the points making up the shape, i.e. six
+for L<Game::TextMapper::Point::Hex> and four for
+L<Game::TextMapper::Point::Square>.
+
+The SVG coordinates are arrays with x and y coordinates relative to the center
+of the shape.
+
+=cut
 
 my @hex = ([-$dx, 0], [-$dx/2, $dy/2], [$dx/2, $dy/2],
 	   [$dx, 0], [$dx/2, -$dy/2], [-$dx/2, -$dy/2]);
@@ -143,5 +144,14 @@ sub svg_label {
   $data .= qq{</g>\n};
   return $data;
 }
+
+=head1 SEE ALSO
+
+This is a specialisation of L<Game::TextMapper::Point>.
+
+The SVG size is determined by C<$dx> and C<$dy> from
+L<Game::TextMapper::Constants>.
+
+=cut
 
 1;

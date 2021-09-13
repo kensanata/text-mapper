@@ -36,42 +36,28 @@ draw a SVG rectangle at the correct coordinates using these definitions.
 
 =head1 SEE ALSO
 
-L<Game::TextMapper::Constants>
+This is a specialisation of L<Game::TextMapper::Point>.
+
+The SVG size is determined by C<$dy> from L<Game::TextMapper::Constants>.
 
 =cut
 
 package Game::TextMapper::Point::Square;
 
-use Game::TextMapper::Constants qw($dx $dy);
+use Game::TextMapper::Constants qw($dy);
 
 use Game::TextMapper::Point;
 use Modern::Perl '2018';
 use Mojo::Util qw(url_escape);
-use Mojo::Base -base;
-
-has 'x';
-has 'y';
-has 'z';
-has 'type';
-has 'label';
-has 'size';
-has 'map';
-
-sub str {
-  my $self = shift;
-  return '(' . $self->x . ',' . $self->y . ')';
-}
+use Mojo::Base 'Game::TextMapper::Point';
 
 sub svg_region {
   my ($self, $attributes, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  my $id = "square$x$y$z";
-  $y += $offset->[$z];
-  $x = ($x - 0.5) * $dy;
-  $y = ($y - 0.5) * $dy; # square!
-  return qq{    <rect id="$id" $attributes x="$x" y="$y" width="$dy" height="$dy" />\n}
+  return sprintf(qq{    <rect id="square%s%s%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f" %s />\n},
+		 $self->x, $self->y, $self->z,
+		 ($self->x - 0.5) * $dy,
+		 ($self->y + $offset->[$self->z] - 0.5) * $dy,
+		 $dy, $dy, $attributes);
 }
 
 sub svg {
