@@ -55,8 +55,8 @@ sub make_line {
 sub shape {
   my $self = shift;
   my $attributes = shift;
-  my $half = $dy / 2;
-  return qq{<rect $attributes x="-$half" y="-$half" width="$dy" height="$dy" />};
+  return sprintf('<rect %s x="%.1f" y="%.1f" width="%.1f" height="%.1f" />',
+		 $attributes, -$dy/2, -$dy/2, $dy, $dy);
 }
 
 sub viewbox {

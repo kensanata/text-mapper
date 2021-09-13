@@ -25,7 +25,7 @@ Game::TextMapper::Point::Square - a square on a map
     use Game::TextMapper::Point::Square;
     my $square = Game::TextMapper::Point::Square->new(x => 1, y => 1, z => 0);
     say $square->svg_region('', [0]);
-    # <rect id="square110"  x="86.6025403784439" y="86.6025403784439" width="173.205080756888" height="173.205080756888" />
+    # <rect id="square110"  x="86.6" y="86.6" width="173.2" height="173.2" />
 
 =head1 DESCRIPTION
 
@@ -68,7 +68,7 @@ sub svg {
   $y += $offset->[$z];
   my $data = '';
   for my $type (@{$self->type}) {
-    $data .= sprintf(qq{    <use x="%d" y="%d" xlink:href="#%s" />\n},
+    $data .= sprintf(qq{    <use x="%.1f" y="%.1f" xlink:href="#%s" />\n},
 		     $x * $dy,
 		     $y * $dy, # square
 		     $type);
@@ -84,7 +84,7 @@ sub svg_coordinates {
   $y += $offset->[$z];
   my $data = '';
   $data .= qq{    <text text-anchor="middle"};
-  $data .= sprintf(qq{ x="%d" y="%d"},
+  $data .= sprintf(qq{ x="%.1f" y="%.1f"},
 		   $x * $dy,
 		   ($y - 0.4) * $dy); # square
   $data .= ' ';
@@ -109,7 +109,7 @@ sub svg_label {
   my $y = $self->y;
   my $z = $self->z;
   $y += $offset->[$z];
-  my $data = sprintf(qq{    <g><text text-anchor="middle" x="%d" y="%d" %s %s>}
+  my $data = sprintf(qq{    <g><text text-anchor="middle" x="%.1f" y="%.1f" %s %s>}
                      . $self->label
                      . qq{</text>},
                      $x  * $dy,
@@ -117,7 +117,7 @@ sub svg_label {
                      $attributes ||'',
 		     $self->map->glow_attributes ||'');
   $data .= qq{<a xlink:href="$url">} if $url;
-  $data .= sprintf(qq{<text text-anchor="middle" x="%d" y="%d" %s>}
+  $data .= sprintf(qq{<text text-anchor="middle" x="%.1f" y="%.1f" %s>}
 		   . $self->label
 		   . qq{</text>},
 		   $x * $dy,

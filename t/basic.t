@@ -58,8 +58,8 @@ $t->get_ok('/alpine/random')
 $t->get_ok('/alpine/random?type=square')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
-    ->element_exists('g#backgrounds use[x=173][y=173]')
-    ->text_is('g#coordinates text[x=173][y=103]', "01.01")
+    ->element_exists('g#backgrounds use[x=173.2][y=173.2]')
+    ->text_is('g#coordinates text[x=173.2][y=103.9]', "01.01")
     ->element_exists('g#regions rect#square010100');
 
 $t->get_ok('/island/random')
@@ -72,8 +72,8 @@ $t->get_ok('/island/random')
 $t->get_ok('/island/random?type=square')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
-    ->element_exists('g#backgrounds use[x=173][y=173]')
-    ->text_is('g#coordinates text[x=173][y=103]', "01.01")
+    ->element_exists('g#backgrounds use[x=173.2][y=173.2]')
+    ->text_is('g#coordinates text[x=173.2][y=103.9]', "01.01")
     ->element_exists('g#regions rect#square010100');
 
 $t->get_ok('/apocalypse/random')
