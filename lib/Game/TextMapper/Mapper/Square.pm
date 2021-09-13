@@ -29,6 +29,9 @@ generate the SVG for the entire map.
 
 This class is derived from L<Game::TextMapper::Mapper>.
 
+It uses L<Game::TextMapper::Point::Square> to represent points (regions) and
+L<Game::TextMapper::Line::Square> to represent lines.
+
 L<Game::TextMapper::Mapper::Hex> is a similar class for hex maps.
 
 =cut
