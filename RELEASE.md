@@ -1,6 +1,10 @@
 # What to do for a release?
 
-Run `make check`.
+```
+perl Makefile.PL
+make check
+make test
+```
 
 Update `Changes` with user-visible changes.
 
