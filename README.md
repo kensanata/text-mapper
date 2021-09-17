@@ -94,20 +94,34 @@ script/text-mapper daemon --mode development --listen "http://*:3010"
 
 ## Docker
 
-If you want to experiment with a clean Perl environment in order to
-check whether the dependencies are OK, make sure you have Docker
-installed, are part of the docker group, and get the latest-perl
-image:
+If you just want to run the stable version from Docker:
 
 ```bash
+docker run --publish=3000 perl:latest /bin/bash -c \
+  "cpanm Game::TextMapper && text-mapper daemon"
+```
+
+But… think of all the CO₂ this uses, installing all those Perl modules
+from source. 😭
+
+If you don’t know anything about Docker but you’re a developer and you
+want to check whether the dependencies are OK, you can do this using
+Docker. Here’s the entire setup:
+
+```bash
+# install docker on a Debian system
 sudo apt install docker.io
+# add the current user to the docker group
 sudo adduser $(whoami) docker
 # if groups doesn’t show docker, you need to log in again
 su - $(whoami)
-# this binds the working directory to /app inside the image
+# run docker interactively and binds the working directory to /app inside
+# the image; run bash inside the image
 docker run -it --rm -v $(pwd):/app perl:latest /bin/bash
-# now we’re root inside the image
+# inside the image, cd into the working directory and install it
 cd /app
-cpanm File::ShareDir::Install
 cpanm .
 ```
+
+This exposes all hidden dependencies, as all you get is a clean Perl
+installation.
