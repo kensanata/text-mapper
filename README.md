@@ -94,19 +94,9 @@ script/text-mapper daemon --mode development --listen "http://*:3010"
 
 ## Docker
 
-If you just want to run the stable version from Docker:
+## Quickstart
 
-```bash
-docker run --publish=3000 perl:latest /bin/bash -c \
-  "cpanm Game::TextMapper && text-mapper daemon"
-```
-
-But… think of all the CO₂ this uses, installing all those Perl modules
-from source. 😭
-
-If you don’t know anything about Docker but you’re a developer and you
-want to check whether the dependencies are OK, you can do this using
-Docker. Here’s the entire setup:
+If you don’t know anything about Docker, this is how you set it up.
 
 ```bash
 # install docker on a Debian system
@@ -115,13 +105,88 @@ sudo apt install docker.io
 sudo adduser $(whoami) docker
 # if groups doesn’t show docker, you need to log in again
 su - $(whoami)
-# run docker interactively and binds the working directory to /app inside
-# the image; run bash inside the image
-docker run -it --rm -v $(pwd):/app perl:latest /bin/bash
-# inside the image, cd into the working directory and install it
-cd /app
-cpanm .
 ```
 
-This exposes all hidden dependencies, as all you get is a clean Perl
-installation.
+### Running the latest Text Mapper
+
+There is a Dockerfile in the repository. Check out the repository,
+change into the workdirectory, and build a docker image, tagging it
+`test/text-mapper`.
+
+```bash
+git clone https://alexschroeder.ch/cgit/text-mapper
+cd text-maper
+docker build --tag test/text-mapper .
+```
+
+This is a good way to check for missing dependencies. 😁
+
+To run the application on it:
+
+```bash
+docker run --publish=3010:3010 test/text-mapper \
+  text-mapper daemon --listen='http://*:3010'
+```
+
+This runs the web application in the container and has it listen on
+`http://127.0.0.1:3010` – and you can access it from the host.
+
+### Troubleshooting
+
+If something goes wrong, list the images you have in order to find its
+ID. You might it for the other commands.
+
+```bash
+docker images
+```
+
+This tells us that the image we’re looking for is 6961f88a0e2b.
+
+```text
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+<none>              <none>              6961f88a0e2b        4 minutes ago       862MB
+perl                latest              4307319f1e3e        4 weeks ago         860MB
+```
+
+To run a command in the image:
+
+```bash
+docker run 6961f88a0e2b ls /app
+```
+
+Or interactively:
+
+```bash
+docker run --interactive --tty 6961f88a0e2b bash
+```
+
+In this example, docker build ended up without a tag. Let’s fix that:
+
+```bash
+docker tag 6961f88a0e2b test/text-mapper:latest
+```
+
+If your browser refuses to connect to the web application even though
+it appears to be running, check the port mapping.
+
+First, let’s find the container ID currently running:
+
+```bash
+$ docker ps
+```
+
+Note how there are no ports in the output:
+
+```text
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+d76e0cfe79e6        test/text-mapper    "/usr/local/bin/text…"   2 minutes ago       Up 2 minutes                            hungry_lamport
+```
+
+The ports on the host are not mapped to the container! We need to stop
+the stop container and make sure to run `docker run` with the
+`--publish` argument. If we do, this is what the output will look:
+
+```text
+CONTAINER ID        IMAGE                     COMMAND                  CREATED             STATUS              PORTS                    NAMES
+700606a5e230        test/text-mapper:latest   "text-mapper daemon …"   5 seconds ago       Up 4 seconds        0.0.0.0:3010->3010/tcp   relaxed_fermat
+```
