@@ -117,11 +117,12 @@ it `test/text-mapper`:
 
 ```bash
 git clone https://alexschroeder.ch/cgit/text-mapper
-cd text-maper
+cd text-mapper
 docker build --tag test/text-mapper .
 ```
 
-This is a good way to check for missing dependencies. 😁
+If you remove the `--notest` argument in the Dockerfile, this is a
+good way to check for missing dependencies. 😁
 
 To run the application on it:
 
