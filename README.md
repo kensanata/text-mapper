@@ -21,6 +21,7 @@ The app comes with a tutorial built in. See the
 
 Perl Modules (or Debian modules):
 
+* File::ShareDir::Install or libfile-sharedir-install-perl
 * IO::Socket::SSL or libio-socket-ssl-perl
 * LWP::UserAgent or liblwp-useragent-perl
 * List::MoreUtils or liblist-moreutils-perl
@@ -28,12 +29,13 @@ Perl Modules (or Debian modules):
 * Mojolicious or libmojolicious-perl
 * Role::Tiny::With or librole-tiny-perl
 
-The IO::Socket::SSL dependency means that you’ll need OpenSSL
-development libraries installed as well: openssl-devel or equivalent,
+If you are going to build IO::Socket::SSL, then you’ll need OpenSSL
+development libraries installed: openssl-devel or equivalent,
 depending on your package manager.
 
 To install from the working directory (which will also install all the
-dependencies) use cpan or cpanm.
+dependencies from CPAN unless you installed them beforehand using your
+system’s package manager) use cpan or cpanm.
 
 Example:
 
@@ -73,7 +75,7 @@ named `text-mapper.conf` like the following:
   # the URL where the contributions for include statements are
   # e.g. 'https://campaignwiki.org/contrib' (only HTTP and HTTPS
   # schema allowed), or a local directory
-  contrib => '/home/alex/src/text-mapper/share',
+  contrib => 'share',
 }
 ```
 
@@ -110,8 +112,8 @@ su - $(whoami)
 ### Running the latest Text Mapper
 
 There is a Dockerfile in the repository. Check out the repository,
-change into the workdirectory, and build a docker image, tagging it
-`test/text-mapper`.
+change into the working directory, and build a docker image, tagging
+it `test/text-mapper`:
 
 ```bash
 git clone https://alexschroeder.ch/cgit/text-mapper
@@ -125,7 +127,7 @@ To run the application on it:
 
 ```bash
 docker run --publish=3010:3010 test/text-mapper \
-  text-mapper daemon --listen='http://*:3010'
+  text-mapper daemon --listen "http://*:3010"
 ```
 
 This runs the web application in the container and has it listen on
