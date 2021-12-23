@@ -61,6 +61,7 @@ has 'bumps';
 has 'bump';
 has 'bottom';
 has 'arid';
+has 'wind';
 
 sub place_peak {
   my $self = shift;
@@ -300,10 +301,9 @@ sub swamps {
   my $self = shift;
   # any area with water flowing to a neighbor at the same altitude is a swamp
   my ($world, $altitude, $water, $flow) = @_;
- HEX:
   for my $coordinates (keys %$altitude) {
     # don't turn lakes into swamps and skip bogs
-    next if $world->{$coordinates} =~ /ocean|water|swamp/;
+    next if $world->{$coordinates} =~ /ocean|water|swamp|grass/;
     # swamps require a river
     next unless $flow->{$coordinates};
     # look at the neighbor the water would flow to
@@ -397,11 +397,11 @@ sub rivers {
   my ($world, $altitude, $water, $flow, $level) = @_;
   # $flow are the sources points of rivers, or 1 if a river flows through them
   my @growing = map {
-    $world->{$_} = "light-grey forest-hill" unless $world->{$_} =~ /mountain|swamp|water|ocean/;
+    $world->{$_} = "light-grey forest-hill" unless $world->{$_} =~ /mountain|swamp|grass|water|ocean/;
     # warn "Started a river at $_ ($altitude->{$_} == $level)\n";
     $flow->{$_} = [$_]
   } sort grep {
-    $altitude->{$_} == $level and not $flow->{$_}
+    $altitude->{$_} == $level and not $flow->{$_} and $world->{$_} !~ /dry/;
   } keys %$altitude;
   return $self->grow_rivers(\@growing, $water, $flow);
 }
@@ -535,7 +535,8 @@ sub wet {
 sub grow_forest {
   my $self = shift;
   my ($coordinates, $world, $altitude) = @_;
-  my @candidates = ($coordinates);
+  my @candidates;
+  push(@candidates, $coordinates) if $world->{$coordinates} !~ /mountain|hill|water|ocean|swamp|grass/;
   my $n = $self->arid;
   # fractions are allowed
   $n += 1 if rand() < $self->arid - int($self->arid);
@@ -546,7 +547,8 @@ sub grow_forest {
       my ($x, $y) = $self->neighbor($coordinates, $i);
       next unless $self->legal($x, $y);
       my $other = coordinates($x, $y);
-      push(@candidates, $other) if $world->{$other} !~ /mountain|hill|water|ocean|swamp/;
+      next if $altitude->{$coordinates} < $altitude->{$other}; # distance of one unless higher
+      push(@candidates, $other) if $world->{$other} !~ /mountain|hill|water|ocean|swamp|grass/;
     }
   }
   if ($n >= 2) {
@@ -554,9 +556,11 @@ sub grow_forest {
       my ($x, $y) = $self->neighbor2($coordinates, $i);
       next unless $self->legal($x, $y);
       my $other = coordinates($x, $y);
-      push(@candidates, $other) if $world->{$other} !~ /mountain|hill|water|ocean|swamp/;
+      next if $altitude->{$coordinates} <= $altitude->{$other}; # distance of two only if lower
+      push(@candidates, $other) if $world->{$other} !~ /mountain|hill|water|ocean|swamp|grass/;
     }
   }
+  $log->debug("forest growth: $coordinates: @candidates");
   for $coordinates (@candidates) {
     if ($altitude->{$coordinates} >= 7) {
       $world->{$coordinates} = "light-green fir-forest";
@@ -573,11 +577,10 @@ sub grow_forest {
 sub forests {
   my $self = shift;
   my ($world, $altitude, $flow) = @_;
-  # empty hexes with a river flowing through them are forest filled valleys
+  # empty hexes with a river flowing through them (and nearby hexes) are forest
+  # filled valleys
   for my $coordinates (keys %$flow) {
-    if ($world->{$coordinates} !~ /mountain|hill|water|ocean|swamp/) {
-      $self->grow_forest($coordinates, $world, $altitude);
-    }
+    $self->grow_forest($coordinates, $world, $altitude);
   }
 }
 
@@ -600,10 +603,30 @@ sub dry {
   return 1;
 }
 
+sub winds {
+  my $self = shift;
+  my ($world, $altitude, $water, $flow) = @_;
+  my $wind = $self->wind // $self->random_neighbor;
+  $log->debug("Wind: $wind");
+  for my $coordinates (keys %$altitude) {
+    # limit ourselves to altitude 7 and 8
+    next if $altitude->{$coordinates} < 7 or $altitude->{$coordinates} > 8;
+    # look at the neighbor the water would flow to
+    my ($x, $y) = $self->neighbor($coordinates, $wind);
+    # skip if off the map
+    next unless $self->legal($x, $y);
+    my $other = coordinates($x, $y);
+    # skip if the other hex is lower
+    next if $altitude->{$coordinates} > $altitude->{$other};
+    # if the other hex was higher, this land is dry
+    $log->debug("$coordinates is dry because of $other");
+    $world->{$coordinates} .= " dry desert";
+  }
+}
+
 sub bogs {
   my $self = shift;
   my ($world, $altitude, $water, $flow) = @_;
- HEX:
   for my $coordinates (keys %$altitude) {
     # limit ourselves to altitude 7
     next if $altitude->{$coordinates} != 7;
@@ -617,26 +640,27 @@ sub bogs {
     # skip if water flows downhill
     next if $altitude->{$coordinates} > $altitude->{$other};
     # if there was no lower neighbor, this is a bog
-    $world->{$coordinates} =~ s/height\d+/grey swamp/;
+    $world->{$coordinates} =~ s/height\d+/grey grass/;
   }
 }
 
-sub bushes {
+sub grass {
   my $self = shift;
   my ($world, $altitude, $water, $flow) = @_;
-  # as always, keys is a source of randomness that's independent of srand which
-  # is why we sort
+  # As always, keys is a source of randomness that's independent of srand which
+  # is why we sort.
   for my $coordinates (sort keys %$world) {
-    if ($world->{$coordinates} !~ /mountain|hill|water|ocean|swamp|forest|firs|trees/) {
-      my $thing = "bushes";
+    if ($world->{$coordinates} !~ /mountain|hill|water|ocean|swamp|grass|forest|firs|trees/) {
+      my $thing = "grass";
+      my $colour = $altitude->{$coordinates} >= 7 ? "light-grey" : "light-green";
+      # At high altitude, the choice is between hills and grass. At lower
+      # altitudes, the choices is between hills, bushes, and grass.
       my $rand = rand();
       if ($altitude->{$coordinates} >= 3 and $rand < 0.2) {
 	$thing = "hill";
-      } elsif ($altitude->{$coordinates} <= 3 and $rand < 0.6) {
-	  $thing = "grass";
+      } elsif ($altitude->{$coordinates} <= 3 and $rand < 0.4) {
+	$thing = "bushes";
       }
-      my $colour = "light-green";
-      $colour = "light-grey" if $altitude->{$coordinates} >= 6;
       $world->{$coordinates} = "$colour $thing";
     }
   }
@@ -754,18 +778,19 @@ sub generate {
     sub { $self->water($world, $altitude, $water); },
     sub { $self->lakes($world, $altitude, $water); },
     sub { $self->flood($world, $altitude, $water); },
+    sub { $self->winds($world, $altitude, $water, $flow); },
     sub { $self->bogs($world, $altitude, $water, $flow); },
     sub { push(@$rivers, $self->rivers($world, $altitude, $water, $flow, 8));
 	  push(@$rivers, $self->rivers($world, $altitude, $water, $flow, 7)); },
     sub { push(@$canyons, $self->canyons($world, $altitude, $rivers)); },
     sub { $self->swamps($world, $altitude, $water, $flow); },
     sub { $self->forests($world, $altitude, $flow); },
-    sub { $self->bushes($world, $altitude, $water, $flow); },
+    sub { $self->grass($world, $altitude, $water, $flow); },
     sub { $self->cliffs($world, $altitude); },
     sub { push(@$settlements, $self->settlements($world, $flow)); },
     sub { push(@$trails, $self->trails($altitude, $settlements)); },
     # make sure you look at "alpine_document.html.ep" if you change this list!
-    # make sure you look at '/alpine/document' if you add to this list
+    # make sure you look at '/alpine/document' if you add to this list!
       );
 
   # $step 0 runs all the code; note that we can't simply cache those results
@@ -779,6 +804,7 @@ sub generate {
 
 sub generate_map {
   my $self = shift;
+
   # The parameters turn into class variables.
   $self->width(shift // 30);
   $self->height(shift // 10);
@@ -789,6 +815,7 @@ sub generate_map {
   $self->bump(shift // 2);
   $self->bottom(shift // 0);
   $self->arid(shift // 2);
+  $self->wind(shift); # or random
   my $seed = shift||time;
   my $url = shift;
   my $step = shift||0;
@@ -829,6 +856,12 @@ sub generate_map {
     # is present in other SVG files in the same document
     for my $coordinates (keys %$world) {
       $world->{$coordinates} =~ s/ arrow\d//;
+    }
+  }
+  if ($step < 8 or $step > 10) {
+    # remove desert -- these are only used for documenting dry areas
+    for my $coordinates (keys %$world) {
+      $world->{$coordinates} =~ s/ desert//;
     }
   }
 

@@ -177,6 +177,7 @@ sub alpine_map {
 		$c->param('bump'),
 		$c->param('bottom'),
 		$c->param('arid'),
+		$c->param('wind'),
 		$seed,
 		$url,
 		$step,
@@ -230,8 +231,11 @@ get '/alpine/document' => sub {
   my $type = $c->param('type') || 'hex';
   # use the same seed for all the calls
   my $seed = $c->param('seed');
-  $seed = $c->param('seed' => int(rand(1000000000))) unless defined $seed;
-  for my $step (1 .. 16) {
+  if (not defined $seed) {
+    $seed = int(rand(1000000000));
+    $c->param('seed' => $seed);
+  }
+  for my $step (1 .. 17) {
     my $map = alpine_map($c, $step);
     my $mapper;
     if ($type eq 'hex') {
@@ -245,8 +249,8 @@ get '/alpine/document' => sub {
   };
   $c->stash("maps" => \@maps);
 
-  # the documentation needs all the defaults of Alpine::generate_map (but
-  # we'd like to use a smaller map because it is so slow)
+  # The documentation needs all the defaults of Alpine::generate_map (but
+  # we'd like to use a smaller map because it is so slow).
   my $width = $c->param('width') // 20;
   my $height = $c->param('height') // 5; # instead of 10
   my $steepness = $c->param('steepness') // 3;
@@ -257,6 +261,7 @@ get '/alpine/document' => sub {
   my $bottom = $c->param('bottom') // 0;
   my $arid = $c->param('arid') // 2;
 
+  # Generate the documentation text based on the stashed maps.
   $c->render(template => 'alpine_document',
 	     seed => $seed,
 	     width => $width,
@@ -1684,6 +1689,13 @@ are our initial candidates. We keep expanding our list of candidates as we add
 at neighbors of neighbors. At every step we prefer the lowest of these
 candidates. Once we have reached the edge of the map, we backtrack and change
 any arrows pointing the wrong way.</p>
+
+%== shift(@$maps)
+
+<p>We determined the predominant wind direction and mark areas in the wind
+shadow of mountains as having no river sources, presumably because of reduced
+rainfall. Specifically, a hex with altitude 7 or 8 next to a hex where the wind
+is coming from that is at the same altitude or higher is marked as "dry". The only effect is </p>
 
 %== shift(@$maps)
 
