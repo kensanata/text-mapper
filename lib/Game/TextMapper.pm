@@ -235,7 +235,7 @@ get '/alpine/document' => sub {
     $seed = int(rand(1000000000));
     $c->param('seed' => $seed);
   }
-  for my $step (1 .. 17) {
+  for my $step (1 .. 18) {
     my $map = alpine_map($c, $step);
     my $mapper;
     if ($type eq 'hex') {
@@ -1692,10 +1692,12 @@ any arrows pointing the wrong way.</p>
 
 %== shift(@$maps)
 
-<p>We determined the predominant wind direction and mark areas in the wind
-shadow of mountains as having no river sources, presumably because of reduced
-rainfall. Specifically, a hex with altitude 7 or 8 next to a hex where the wind
-is coming from that is at the same altitude or higher is marked as "dry". The only effect is </p>
+<p>We determined the predominant wind direction (see purple arrow in 01.01) and
+mark areas in the wind shadow of mountains as having no river sources,
+presumably because of reduced rainfall. Specifically, a hex with altitude 7 or 8
+next to a hex where the wind is coming from that is at the same altitude or
+higher is marked as "dry". The only effect is that there can be no river
+sourcesin these hexes (as these are all at altitudes 7 and 8)</p>
 
 %== shift(@$maps)
 
@@ -1728,10 +1730,15 @@ otherwise dark-grey.</p>
 <p>Wherever there is water and no swamp, forests will form. The exact type again
 depends on the altitude: light green fir-forest (altitude 7 and higher), green
 fir-forest (altitude 6), green forest (altitude 4–5), dark-green forest
-(altitude 3 and lower). Once a forest is placed, it expands up to <%= $arid %> hexes
-away, even if those hexes have no water flowing through them. You probably need
-fewer peaks on your map to verify this (a <%= link_to
-url_with('alpinerandom')->query({peaks => 1}) => begin %>lonely mountain<% end
+(altitude 3 and lower). Once a forest is placed, it expands up to <%= $arid %>
+hexes away, even if those hexes have no water flowing through them. When
+considering neighbouring hexes, they have to be at the same altitude or lower;
+when considering hexes with an intermediary hex, the intermediary hex has to be
+at the same altitude or lower, and the other he has to be at the same altitude
+or lower as the intermediary hex.</p>
+
+<p>You probably need fewer peaks on your map to verify this (a <%= link_to
+url_with('alpinedocument')->query({peaks => 1}) => begin %>lonely mountain<% end
 %> map, for example).</p>
 
 %== shift(@$maps)
@@ -1749,23 +1756,44 @@ below).</p>
 %== shift(@$maps)
 
 <p>Wherenver there is forest, settlements will be built. These reduce the
-density of the forest. There are three levels of settlements: thorps, villages
-and towns.</p>
+density of the forest. Of the settlements are big, trees disappear completely
+and are replaced by soil. If the village or town is next to a water hex, it gets
+a port and grows by one step. Note that currently it's impossibleto get a
+city.</p>
 
 <table>
-<tr><th>Settlement</th><th>Forest</th><th>Number</th><th>Minimum Distance</th></tr>
-<tr><td>Thorp</td><td>fir-forest, forest</td><td class="numeric">10%</td><td class="numeric">2</td></tr>
-<tr><td>Village</td><td>forest &amp; river</td><td class="numeric">5%</td><td class="numeric">5</td></tr>
-<tr><td>Town</td><td>forest &amp; river</td><td class="numeric">2½%</td><td class="numeric">10</td></tr>
-<tr><td>Law</td><td>white mountain</td><td class="numeric">2½%</td><td class="numeric">10</td></tr>
-<tr><td>Chaos</td><td>swamp</td><td class="numeric">2½%</td><td class="numeric">10</td></tr>
+<tr><th>Settlement</th><th>Conditions</th><th>Change to</th><th>Number</th>
+    <th>Minimum Distance</th><th>Near water</th></tr>
+<tr><td>thorp</td><td>fir-forest, or forest</td><td>firs, or trees</td><td class="numeric">10%</td>
+    <td class="numeric">2</td><td>unchanged</td></tr>
+<tr><td>village</td><td>forest &amp; river</td><td>trees</td><td class="numeric">5%</td>
+    <td class="numeric">5</td><td>town &amp; port</td></tr>
+<tr><td>town</td><td>forest &amp; river</td><td>soil</td><td class="numeric">2½%</td>
+    <td class="numeric">10</td><td>large town &amp; port</td></tr>
+<tr><td>large town</td><td>none</td><td>light soil</td><td class="numeric">0%</td>
+    <td class="numeric">n/a</td><td>city &amp; port</td></tr>
+<tr><td>city</td><td>none</td><td>light soil</td><td class="numeric">0%</td>
+    <td class="numeric">n/a</td><td>unchanged</td></tr>
+<tr><td>law</td><td>white mountain</td><td>unchanged</td><td class="numeric">2½%</td>
+    <td class="numeric">10</td><td>unchanged</td></tr>
+<tr><td>chaos</td><td>swamp</td><td>unchanged</td><td class="numeric">2½%</td>
+    <td class="numeric">10</td><td>unchanged</td></tr>
 </table>
 
 %== shift(@$maps)
 
 <p>Trails connect every settlement to any neighbor that is one or two hexes
 away. If no such neighbor can be found, we try to find neighbors that are three
-hexes away.</p>
+hexes away. If there are multiple options, we prefer the one at a lower
+altitude.</p>
+
+%== shift(@$maps)
+
+<p>Finally, we take advantage of the fact that rivers continue into the ocean.
+We identify river mouths where the altitude change is just 1 (i.e. no cliff) and
+extend the land into the water using a blue-green swamp. These are coastal
+marshes. We also check the next hex along the (invisible) river to check if this
+an ocean hex. If it is, we change it to water.
 
 %== shift(@$maps)
 

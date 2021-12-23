@@ -41,6 +41,7 @@ ocean attributes fill="#1c86ee"
 light-grey attributes fill="#dcddbe"
 grey attributes fill="#afbc9e"
 dark-grey attributes fill="#859d70"
+blue-green attributes fill="#6f9487"
 
 # suitable for forests
 light-green attributes fill="#b7c18c"

@@ -51,6 +51,17 @@ use POSIX qw(ceil);
 
 =head1 METHODS
 
+=head2 reverse
+
+Reverses a direction.
+
+=cut
+
+sub reverse {
+  my ($self, $i) = @_;
+  return ($i + 3) % 6;
+}
+
 =head2 neighbors
 
 The list of directions for neighbours one step away (0 to 5).
@@ -194,9 +205,11 @@ sub arrows {
   my $self = shift;
   return
       qq{<marker id="arrow" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M6,0 V6 L0,3 Z" style="fill: black;" /></marker>},
+      qq{<marker id="wind" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto"><path d="M6,0 V6 L0,3 Z" style="fill: purple;" /></marker>},
       map {
 	my $angle = 60 * $_;
 	qq{<path id="arrow$_" transform="rotate($angle)" d="M-11.5,-5.8 L11.5,5.8" style="stroke: black; stroke-width: 3px; fill: none; marker-start: url(#arrow);"/>},
+	qq{<path id="wind$_" transform="translate(40,40) rotate($angle)" d="M-11.5,-5.8 L11.5,5.8" style="stroke: purple; stroke-width: 3px; fill: none; marker-start: url(#wind);"/>},
   } ($self->neighbors());
 }
 
@@ -206,6 +219,5 @@ L<Game::TextMapper::Schroeder::Base>
 L<Game::TextMapper::Schroeder::Square>
 
 =cut
-
 
 1;
