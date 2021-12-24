@@ -49,6 +49,7 @@
 1202 grey "grey"
 1203 dark-grey "dark-grey"
 1204 poisoned "poisoned"
+1205 zone "zone"
 
 # trail example and larger label example
 0106 dark-green fir-forest "Deep Forest" 30
