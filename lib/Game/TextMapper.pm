@@ -1692,17 +1692,17 @@ any arrows pointing the wrong way.</p>
 
 %== shift(@$maps)
 
+<p>We add bogs (altitude 7) if the water flows into a hex at the same altitude.
+It is insufficiently drained. We use grey swamps to indicate this.</p>
+
+%== shift(@$maps)
+
 <p>We determined the predominant wind direction (see purple arrow in 01.01) and
 mark areas in the wind shadow of mountains as having no river sources,
 presumably because of reduced rainfall. Specifically, a hex with altitude 7 or 8
 next to a hex where the wind is coming from that is at the same altitude or
-higher is marked as "dry". The only effect is that there can be no river
-sourcesin these hexes (as these are all at altitudes 7 and 8)</p>
-
-%== shift(@$maps)
-
-<p>We add bogs (altitude 7) if the water flows into a hex at the same altitude.
-It is insufficiently drained. We use grey swamps to indicate this.</p>
+higher is marked as "dry". The only effect is that there can be no river sources
+in these hexes (as these are all at altitudes 7 and 8)</p>
 
 %== shift(@$maps)
 
@@ -1744,10 +1744,17 @@ url_with('alpinedocument')->query({peaks => 1}) => begin %>lonely mountain<% end
 %== shift(@$maps)
 
 <p>Any remaining hexes have no water nearby and are considered to be little more
-arid. They get bushes, a hill (20% of the time at altitudes 3 or higher), or
-some grass (60% of the time at altitudes 3 and lower). Higher up, these are
-light grey (altitude 6–7), otherwise they are light green (altitude 5 and
-below).</p>
+arid. At high altitudes, they get "light-grey grass"; at lower altitudes they
+get "light-green bushes". For these lower altitude badlands, we add more variety
+by simulating areas where conditions are bad. We pick a quarter of these hexes,
+and deteriorate them, and their immediate neighbours. That is, we take little
+"circles" of seven hexes each, and place them in these areas. Whenever they
+overlap, conditions deteriorate even further: light-green bushes → light-green
+grass → light-grey grass → dust grass → light-grey hill → dust desert.</p>
+
+<p>You probably need fewer peaks on your map to verify this (a <%= link_to
+url_with('alpinedocument')->query({peaks => 1}) => begin %>lonely mountain<% end
+%> map, for example).</p>
 
 %== shift(@$maps)
 
@@ -1768,7 +1775,7 @@ city.</p>
     <td class="numeric">2</td><td>unchanged</td></tr>
 <tr><td>village</td><td>forest &amp; river</td><td>trees</td><td class="numeric">5%</td>
     <td class="numeric">5</td><td>town &amp; port</td></tr>
-<tr><td>town</td><td>forest &amp; river</td><td>soil</td><td class="numeric">2½%</td>
+<tr><td>town</td><td>forest or dark-forest &amp; river</td><td>soil</td><td class="numeric">2½%</td>
     <td class="numeric">10</td><td>large town &amp; port</td></tr>
 <tr><td>large town</td><td>none</td><td>light soil</td><td class="numeric">0%</td>
     <td class="numeric">n/a</td><td>city &amp; port</td></tr>
