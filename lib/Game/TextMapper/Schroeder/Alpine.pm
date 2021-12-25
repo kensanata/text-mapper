@@ -162,9 +162,8 @@ sub altitude {
   }
 }
 
-sub bumps {
-  my $self = shift;
-  my ($world, $altitude) = @_;
+sub bumpiness {
+  my ($self, $world, $altitude) = @_;
   for (1 .. $self->bumps) {
     for my $delta (-$self->bump, $self->bump) {
       # six attempts to try and find a good hex
@@ -176,7 +175,7 @@ sub bumps {
 	next if $current_altitude > 10 or $current_altitude < 0;
 	# bump it up or down
 	$altitude->{$coordinates} = $current_altitude;
-	$world->{$coordinates} = "height$altitude->{$coordinates}";
+	$world->{$coordinates} = "height$altitude->{$coordinates} zone";
 	$log->debug("bumped altitude of $coordinates by $delta to $current_altitude");
 	# if the bump was +2 or -2, bump the neighbours by +1 or -1
 	if ($delta < -1 or $delta > 1) {
@@ -188,7 +187,7 @@ sub bumps {
 	    $current_altitude = $altitude->{$other} + $delta;
 	    next if $current_altitude > 10 or $current_altitude < 0;
 	    $altitude->{$other} = $current_altitude;
-	    $world->{$other} = "height$altitude->{$other}";
+	    $world->{$other} = "height$altitude->{$other} zone";
 	    $log->debug("$i bumped altitude of $other by $delta to $current_altitude");
 	  }
 	}
@@ -297,14 +296,15 @@ sub lakes {
 }
 
 sub swamps {
-  my $self = shift;
   # any area with water flowing to a neighbor at the same altitude is a swamp
-  my ($world, $altitude, $water, $flow) = @_;
+  my ($self, $world, $altitude, $water, $flow, $dry) = @_;
   for my $coordinates (keys %$altitude) {
     # don't turn lakes into swamps and skip bogs
     next if $world->{$coordinates} =~ /ocean|water|swamp|grass/;
     # swamps require a river
     next unless $flow->{$coordinates};
+    # no swamps when there is a canyon
+    next if $dry->{$coordinates};
     # look at the neighbor the water would flow to
     my ($x, $y) = $self->neighbor($coordinates, $water->{$coordinates});
     # skip if water flows off the map
@@ -447,7 +447,7 @@ sub grow_rivers {
 
 sub canyons {
   my $self = shift;
-  my ($world, $altitude, $rivers, $canyons) = @_;
+  my ($world, $altitude, $rivers, $canyons, $dry) = @_;
   # using a reference to an array so that we can leave pointers in the %seen hash
   my $canyon = [];
   # remember which canyon flows through which hex
@@ -490,6 +490,8 @@ sub canyons {
 	# is the start of a canyon, prepend the last step
 	push(@$canyon, $last) unless @$canyon;
 	push(@$canyon, $coordinates);
+	$world->{$coordinates} .= " zone" unless $dry->{$coordinates};
+	$dry->{$coordinates} = 1;
 	$log->debug("Growing canyon @$canyon");
 	$seen{$coordinates} = $canyon;
       } else {
@@ -528,8 +530,7 @@ sub wet {
 }
 
 sub grow_forest {
-  my $self = shift;
-  my ($coordinates, $world, $altitude) = @_;
+  my ($self, $coordinates, $world, $altitude, $dry) = @_;
   my @candidates;
   push(@candidates, $coordinates) if $world->{$coordinates} !~ /mountain|hill|water|ocean|swamp|grass/;
   my $n = $self->arid;
@@ -542,6 +543,7 @@ sub grow_forest {
       my ($x, $y) = $self->neighbor($coordinates, $i);
       next unless $self->legal($x, $y);
       my $other = coordinates($x, $y);
+      next if $dry->{$other};
       next if $altitude->{$coordinates} < $altitude->{$other}; # distance of one unless higher
       push(@candidates, $other) if $world->{$other} !~ /mountain|hill|water|ocean|swamp|grass/;
     }
@@ -555,8 +557,9 @@ sub grow_forest {
       my $ok = 0;
       for my $m ($self->neighbors()) {
 	my ($mx, $my) = $self->neighbor($coordinates, $m);
-	my $midway = coordinates($mx, $my);
 	next unless $self->legal($mx, $my);
+	my $midway = coordinates($mx, $my);
+	next if $dry->{$midway};
 	next if $self->distance($midway, $other) != 1;
 	next if $altitude->{$coordinates} < $altitude->{$midway};
 	next if $altitude->{$midway} < $altitude->{$other};
@@ -582,12 +585,12 @@ sub grow_forest {
 }
 
 sub forests {
-  my $self = shift;
-  my ($world, $altitude, $flow) = @_;
-  # empty hexes with a river flowing through them (and nearby hexes) are forest
-  # filled valleys
+  my ($self, $world, $altitude, $flow, $dry) = @_;
+  # Empty hexes with a river flowing through them (and nearby hexes) are forest
+  # filled valleys.
   for my $coordinates (keys %$flow) {
-    $self->grow_forest($coordinates, $world, $altitude);
+    next if $dry->{$coordinates};
+    $self->grow_forest($coordinates, $world, $altitude, $dry);
   }
 }
 
@@ -809,13 +812,14 @@ sub marshlands {
 
 sub generate {
   my ($self, $world, $altitude, $water, $rivers, $settlements, $trails, $canyons, $step) = @_;
-  # %flow indicates that there is actually a river in this hex
+  # $flow indicates that there is actually a river in this hex
   my $flow = {};
-
+  # $dry indicates that is a river in this hex, but it cut itself a canyon
+  my $dry = {};
   my @code = (
     sub { $self->flat($altitude);
 	  $self->altitude($world, $altitude); },
-    sub { $self->bumps($world, $altitude); },
+    sub { $self->bumpiness($world, $altitude); },
     sub { $self->mountains($world, $altitude); },
     sub { $self->ocean($world, $altitude); },
     sub { $self->water($world, $altitude, $water); },
@@ -824,9 +828,9 @@ sub generate {
     sub { $self->bogs($world, $altitude, $water); },
     sub { $self->winds($world, $altitude, $water); },
     sub { $self->rivers($world, $altitude, $water, $flow, $rivers); },
-    sub { $self->canyons($world, $altitude, $rivers, $canyons); },
-    sub { $self->swamps($world, $altitude, $water, $flow); },
-    sub { $self->forests($world, $altitude, $flow); },
+    sub { $self->canyons($world, $altitude, $rivers, $canyons, $dry); },
+    sub { $self->swamps($world, $altitude, $water, $flow, $dry); },
+    sub { $self->forests($world, $altitude, $flow, $dry); },
     sub { $self->dry($world, $altitude); },
     sub { $self->cliffs($world, $altitude); },
     sub { push(@$settlements, $self->settlements($world, $flow)); },
@@ -842,6 +846,25 @@ sub generate {
   while (@code) {
     shift(@code)->();
     return if $step == $i++;
+    $self->fixup($world, $altitude, $i);
+  }
+}
+
+# Remove temporary markers that won't be needed in the next step
+sub fixup {
+  my ($self, $world, $altitude, $step, $last) = @_;
+  # When documenting or debugging, water flow arrows are no longer needed when
+  # the rivers are added.
+  if ($step >= 10) {
+    for my $coordinates (keys %$world) {
+      $world->{$coordinates} =~ s/ arrow\d//;
+    }
+  }
+  # Wind direction is only shown once.
+  $world->{"0101"} =~ s/ wind\d//;
+  # Remove zone markers.
+  for my $coordinates (keys %$world) {
+    $world->{$coordinates} =~ s/ zone//;
   }
 }
 
@@ -872,39 +895,23 @@ sub generate_map {
   # pseudo-shuffled, use shuffle sort keys.
   srand($seed);
 
-  # keys for all hashes are coordinates such as "0101".
+  # Keys for all hashes are coordinates such as "0101".
   # %world is the description with values such as "green forest".
   # %altitude is the altitude with values such as 3.
-  # %water is the preferred direction water would take with values such as 0
+  # %water is the preferred direction water would take with values such as 0.
   # (north west); 0 means we need to use "if defined".
-  # @rivers are the rivers with values such as ["0102", "0202"]
-  # @settlements are are the locations of settlements such as "0101"
-  # @trails are the trails connecting these with values as "0102-0202"
-  # $step is how far we want map generation to go where 0 means all the way
+  # @rivers are the rivers with values such as ["0102", "0202"].
+  # @settlements are are the locations of settlements such as "0101".
+  # @trails are the trails connecting these with values as "0102-0202".
+  # $step is how far we want map generation to go where 0 means all the way.
   my ($world, $altitude, $water, $rivers, $settlements, $trails, $canyons) =
       ({}, {}, {}, [], [], [], []);
   $self->generate($world, $altitude, $water, $rivers, $settlements, $trails, $canyons, $step);
 
-  # when documenting or debugging, do this before collecting lines
+  # When documenting or debugging, add altitude as a label.
   if ($step > 0) {
-    # add a height label at the very end
-    if ($step) {
-      for my $coordinates (keys %$world) {
-	$world->{$coordinates} .= ' "' . $altitude->{$coordinates} . '"';
-      }
-    }
-  }
-  if ($step < 8 or $step > 9) {
-    # remove arrows – these should not be rendered but they are because #arrow0
-    # is present in other SVG files in the same document
     for my $coordinates (keys %$world) {
-      $world->{$coordinates} =~ s/ arrow\d//;
-    }
-  }
-  if ($step < 9 or $step > 10) {
-    $world->{"0101"} =~ s/ wind\d//;
-    for my $coordinates (keys %$world) {
-      $world->{$coordinates} =~ s/ zone//;
+      $world->{$coordinates} .= ' "' . $altitude->{$coordinates} . '"';
     }
   }
 
