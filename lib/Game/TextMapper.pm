@@ -1750,7 +1750,7 @@ by simulating areas where conditions are bad. We pick a quarter of these hexes,
 and deteriorate them, and their immediate neighbours. That is, we take little
 "circles" of seven hexes each, and place them in these areas. Whenever they
 overlap, conditions deteriorate even further: light-green bushes → light-green
-grass → light-grey grass → dust grass → light-grey hill → dust desert.</p>
+grass → dust grass → dust hill → dust desert.</p>
 
 <p>You probably need fewer peaks on your map to verify this (a <%= link_to
 url_with('alpinedocument')->query({peaks => 1}) => begin %>lonely mountain<% end

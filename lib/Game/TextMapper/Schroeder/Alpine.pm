@@ -664,10 +664,9 @@ sub dry {
 sub drier {
   my ($self, $world, $coordinates) = @_;
   $world->{$coordinates} =~ s/light-green bushes/light-green grass/
-      or $world->{$coordinates} =~ s/light-green grass/light-grey grass/
-      or $world->{$coordinates} =~ s/light-grey grass/dust grass/
-      or $world->{$coordinates} =~ s/dust grass/light-grey hill/
-      or $world->{$coordinates} =~ s/light-grey hill/dust desert/;
+      or $world->{$coordinates} =~ s/light-green grass/dust grass/
+      or $world->{$coordinates} =~ s/dust grass/dust hill/
+      or $world->{$coordinates} =~ s/dust hill/dust desert/;
 }
 
 sub settlements {
@@ -918,9 +917,9 @@ sub generate_map {
   local $" = "-"; # list items separated by -
   my @lines;
   push(@lines, map { $_ . " " . $world->{$_} } sort keys %$world);
-  push(@lines, map { "@$_ canyon" } @$canyons);
-  push(@lines, map { "@$_ river" } @$rivers);
   push(@lines, map { "$_ trail" } @$trails);
+  push(@lines, map { "@$_ river" } @$rivers);
+  push(@lines, map { "@$_ canyon" } @$canyons); # after rivers
   push(@lines, "include gnomeyland.txt");
 
   # when documenting or debugging, add some more lines at the end
