@@ -49,6 +49,10 @@ light-green attributes fill="#b7c18c"
 green attributes fill="#77904c"
 dark-green attributes fill="#2d501a"
 
+# invisible stuff that we need to create correct PDF files
+dry attributes fill="black" opacity="0.1"
+port attributes opacity="0"
+
 # debug
 red attributes fill="red" opacity="0.8" transform="scale(0.5)"
 
