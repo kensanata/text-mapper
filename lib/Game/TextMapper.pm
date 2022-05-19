@@ -562,7 +562,8 @@ sub star_map {
   my $c = shift;
   my $seed = $c->param('seed') || int(rand(1000000000));
   srand($seed);
-  return Game::TextMapper::Traveller->new->generate_map;
+  my $hash = $c->req->params->to_hash;
+  return Game::TextMapper::Traveller->new(%$hash)->generate_map();
 }
 
 get '/traveller' => sub {
@@ -1497,8 +1498,6 @@ Just caves
 
 <hr>
 
-<p>Ideas and work in progress…
-
 <p><%= link_to url_for('apocalypse') => begin %>Apocalypse<% end %> generates a post-apocalyptic map.
 <%= link_to url_for('apocalypserandom') => begin %>Reload<% end %> for lots of post-apocalyptic maps.
 You'll find the map description in a comment within the SVG file.
@@ -1524,6 +1523,22 @@ You'll find the map description in a comment within the SVG file.
 <p><%= link_to url_for('traveller') => begin %>Traveller<% end %> generates a star map.
 <%= link_to url_for('travellerrandom') => begin %>Reload<% end %> for lots of random star maps.
 You'll find the map description in a comment within the SVG file.
+%= form_for traveller => begin
+<p>
+<table>
+<tr><td>Width:</td><td>
+%= number_field cols => 8, min => 1
+</td></tr>
+<tr><td>Height:</td><td>
+%= number_field rows => 10, min => 1
+</td></tr></table>
+<p>
+%= submit_button "Generate Map Data"
+% end
+
+<hr>
+
+<p>Ideas and work in progress…
 
 <p><%= link_to url_for('island') => begin %>Island<% end %> generates a hotspot-inspired island chain.
 Reload <%= link_to url_for('islandrandom') => begin %>Hex Island<% end %>
