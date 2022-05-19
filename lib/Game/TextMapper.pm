@@ -1399,7 +1399,7 @@ for an explanation of what these parameters do.
 <hr>
 <p>
 <%= link_to smale => begin %>Random<% end %>
-will generate map data based on Erin D. Smale's <em>Hex-Based Campaign Design</em>
+generates map data based on Erin D. Smale's <em>Hex-Based Campaign Design</em>
 (<a href="http://www.welshpiper.com/hex-based-campaign-design-part-1/">Part 1</a>,
 <a href="http://www.welshpiper.com/hex-based-campaign-design-part-2/">Part 2</a>).
 You can also generate a random map
@@ -1421,7 +1421,7 @@ You'll find the map description in a comment within the SVG file.
 
 <hr>
 <p>
-<%= link_to alpine => begin %>Alpine<% end %> will generate map data based on Alex
+<%= link_to alpine => begin %>Alpine<% end %> generates map data based on Alex
 Schroeder's algorithm that's trying to recreate a medieval Swiss landscape, with
 no info to back it up, whatsoever. See it
 <%= link_to url_for('alpinedocument')->query(height => 5) => begin %>documented<% end %>.
@@ -1468,7 +1468,7 @@ explanation of what these parameters do.
 <hr>
 <p>
 <%= link_to url_for('gridmapper')->query(type => 'square') => begin %>Gridmapper<% end %>
-will generate dungeon map data based on geomorph sketches by Robin Green. Or
+generates dungeon map data based on geomorph sketches by Robin Green. Or
 just keep reloading one of these links:
 <%= link_to url_for('gridmapperrandom')->query(rooms => 5) => begin %>5 rooms<% end %>,
 <%= link_to url_for('gridmapperrandom')->query(rooms => 10) => begin %>10 rooms<% end %>,
