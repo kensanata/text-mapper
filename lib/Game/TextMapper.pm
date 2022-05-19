@@ -529,7 +529,8 @@ sub apocalypse_map {
   my $c = shift;
   my $seed = $c->param('seed') || int(rand(1000000000));
   srand($seed);
-  return Game::TextMapper::Apocalypse->new()
+  my $hash = $c->req->params->to_hash;
+  return Game::TextMapper::Apocalypse->new(%$hash)
       ->generate_map();
 }
 
@@ -1501,6 +1502,24 @@ Just caves
 <p><%= link_to url_for('apocalypse') => begin %>Apocalypse<% end %> generates a post-apocalyptic map.
 <%= link_to url_for('apocalypserandom') => begin %>Reload<% end %> for lots of post-apocalyptic maps.
 You'll find the map description in a comment within the SVG file.
+%= form_for apocalypse => begin
+<p>
+<table>
+<tr><td>Width:</td><td>
+%= number_field cols => 20, min => 1
+</td><td>Height:</td><td>
+%= number_field rows => 10, min => 1
+</td></tr>
+<tr><td>Region Size:</td><td>
+%= number_field region_size => 5, min => 1
+</td><td>Settlement Chance:</td><td>
+%= number_field settlement_chance => 0.1, min => 0, max => 1, step => 0.1
+</td></tr></table>
+<p>
+%= submit_button "Generate Map Data"
+% end
+
+<hr>
 
 <p><%= link_to url_for('traveller') => begin %>Traveller<% end %> generates a star map.
 <%= link_to url_for('travellerrandom') => begin %>Reload<% end %> for lots of random star maps.
