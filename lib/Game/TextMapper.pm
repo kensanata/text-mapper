@@ -1874,7 +1874,7 @@ td, th {
 <a href="https://campaignwiki.org/text-mapper">Text Mapper</a>&#x2003;
 <%= link_to 'Help' => 'help' %>&#x2003;
 <%= link_to 'Source' => 'source' %>&#x2003;
-<a href="https://alexschroeder.ch/cgit/hex-mapping/about/#text-mapper">Git</a>&#x2003;
+<a href="https://alexschroeder.ch/cgit/text-mapper/about/">Git</a>&#x2003;
 <a href="https://alexschroeder.ch/wiki/Contact">Alex Schroeder</a>
 </body>
 </html>
