@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# Copyright (C) 2009-2021  Alex Schroeder <alex@gnu.org>
+# Copyright (C) 2009-2022  Alex Schroeder <alex@gnu.org>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -588,13 +588,6 @@ get '/traveller/random/text' => sub {
   my $c = shift;
   my $map = star_map($c);
   $c->render(text => $map, format => 'txt');
-};
-
-get '/source' => sub {
-  my $c = shift;
-  seek(DATA,0,0);
-  local $/ = undef;
-  $c->render(text => <DATA>, format => 'txt');
 };
 
 get '/help' => sub {
@@ -1873,7 +1866,6 @@ td, th {
 <p>
 <a href="https://campaignwiki.org/text-mapper">Text Mapper</a>&#x2003;
 <%= link_to 'Help' => 'help' %>&#x2003;
-<%= link_to 'Source' => 'source' %>&#x2003;
 <a href="https://alexschroeder.ch/cgit/text-mapper/about/">Git</a>&#x2003;
 <a href="https://alexschroeder.ch/wiki/Contact">Alex Schroeder</a>
 </body>
