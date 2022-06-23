@@ -648,6 +648,7 @@ sub dry {
       }
     }
   }
+  return unless @dry;
   # dry some of them up
   my @seeds = @dry[0..@dry/4];
   for my $coordinates (@seeds) {
