@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2021  Alex Schroeder <alex@gnu.org>
+# Copyright (C) 2009-2022  Alex Schroeder <alex@gnu.org>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -50,6 +50,7 @@ use Game::TextMapper::Point;
 use Modern::Perl '2018';
 use Mojo::Util qw(url_escape);
 use Mojo::Base 'Game::TextMapper::Point';
+use Encode;
 
 sub svg_region {
   my ($self, $attributes, $offset) = @_;
@@ -104,7 +105,7 @@ sub svg_label {
       $attributes .= ' font-size="' . $self->size . '"';
     }
   }
-  $url =~ s/\%s/url_escape($self->label)/e or $url .= url_escape($self->label) if $url;
+  $url =~ s/\%s/url_escape(encode_utf8($self->label))/e or $url .= url_escape(encode_utf8($self->label)) if $url;
   my $x = $self->x;
   my $y = $self->y;
   my $z = $self->z;
