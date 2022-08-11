@@ -72,7 +72,7 @@ sub svg_region {
   my $x = $self->x;
   my $y = $self->y;
   my $z = $self->z;
-  my $id = "hex$x$y$z";
+  my $id = "hex$x$y" . ($z != 0 ? $z : ''); # z-axis 0 means no z axis for the $id
   $y += $offset->[$z];
   my $points = join(" ", map {
     sprintf("%.1f,%.1f",

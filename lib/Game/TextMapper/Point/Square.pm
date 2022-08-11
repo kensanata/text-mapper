@@ -54,7 +54,7 @@ use Mojo::Base 'Game::TextMapper::Point';
 sub svg_region {
   my ($self, $attributes, $offset) = @_;
   return sprintf(qq{    <rect id="square%s%s%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f" %s />\n},
-		 $self->x, $self->y, $self->z,
+		 $self->x, $self->y, $self->z != 0 ? $self->z : '', # z 0 is not printed at all for the $id
 		 ($self->x - 0.5) * $dy,
 		 ($self->y + $offset->[$self->z] - 0.5) * $dy,
 		 $dy, $dy, $attributes);

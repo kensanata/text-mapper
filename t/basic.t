@@ -39,60 +39,60 @@ $t->post_ok('/render' => form => {map => $map})
     # I don't know how to use a namespace for attributes
     ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
+    ->element_exists('g#regions polygon#hex0101');
 
 $t->get_ok('/smale/random')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
     ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
+    ->element_exists('g#regions polygon#hex0101');
 
 $t->get_ok('/alpine/random')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
     ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
+    ->element_exists('g#regions polygon#hex0101');
 
 $t->get_ok('/alpine/random?type=square')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
     ->element_exists('g#backgrounds use[x=173.2][y=173.2]')
     ->text_is('g#coordinates text[x=173.2][y=103.9]', "01.01")
-    ->element_exists('g#regions rect#square010100');
+    ->element_exists('g#regions rect#square0101');
 
 $t->get_ok('/island/random')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
     ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
+    ->element_exists('g#regions polygon#hex0101');
 
 $t->get_ok('/island/random?type=square')
     ->status_is(200)
     ->element_exists('defs g#Keep rect[fill=white]')
     ->element_exists('g#backgrounds use[x=173.2][y=173.2]')
     ->text_is('g#coordinates text[x=173.2][y=103.9]', "01.01")
-    ->element_exists('g#regions rect#square010100');
+    ->element_exists('g#regions rect#square0101');
 
 $t->get_ok('/apocalypse/random')
     ->status_is(200)
     ->element_exists('defs g#cave path[stroke=white]')
     ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
+    ->element_exists('g#regions polygon#hex0101');
 
 $t->get_ok('/traveller/random')
     ->status_is(200)
     ->text_is('defs g#pirate text', '☠')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex010100');
+    ->element_exists('g#regions polygon#hex0101');
 
 $t->get_ok('/gridmapper/random')
     ->status_is(200)
     ->element_exists('defs g#bed rect[stroke=black]')
-    ->element_exists('g#regions rect#square010100');
+    ->element_exists('g#regions rect#square0101');
 
 # warn $t->tx->res->body;
 
