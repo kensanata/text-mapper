@@ -1,4 +1,4 @@
-# Copyright (C) 2021  Alex Schroeder <alex@gnu.org>
+# Copyright (C) 2021–2022  Alex Schroeder <alex@gnu.org>
 
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -30,16 +30,21 @@ $t->get_ok('/')
 
 my $map = <<EOT;
 grass attributes fill="green"
-0101 grass
+0101 grass "Schröder’s"
+url /wiki
 EOT
 
 $t->post_ok('/render' => form => {map => $map})
     ->status_is(200)
     ->element_exists('defs g#grass polygon[fill=green]')
-    # I don't know how to use a namespace for attributes
+    # I don't know how to use a namespace for attributes with Mojo::DOM::CSS
     ->element_exists('g#backgrounds use[x=150.0][y=86.6]')
     ->text_is('g#coordinates text[x=150.0][y=17.3]', "01.01")
-    ->element_exists('g#regions polygon#hex0101');
+    ->element_exists('g#regions polygon#hex0101')
+    ->text_is('g#labels g text', "Schröder’s");
+
+# I don't know how to use a namespace for attributes with Mojo::DOM::CSS
+like($t->tx->res->body, qr(xlink:href="/wikiSchr%C3%B6der%E2%80%99s"), 'xlink:href for url');
 
 $t->get_ok('/smale/random')
     ->status_is(200)
