@@ -61,8 +61,9 @@ use Mojo::Base 'Mojolicious::Command';
 use File::ShareDir 'dist_dir';
 use Pod::Simple::Text;
 use Getopt::Long qw(GetOptionsFromArray);
+use Encode;
 
-has description => 'Render map from STDIN to STDOUT, as SVG';
+has description => 'Render map from STDIN to STDOUT, as SVG (all UTF-8)';
 
 has usage => sub { my $self = shift; $self->extract_usage };
 
@@ -87,7 +88,7 @@ sub run {
     $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
   }
   local $/ = undef;
-  $mapper->initialize(<STDIN>);
+  $mapper->initialize(decode_utf8(<STDIN>));
   print $mapper->svg;
 }
 
