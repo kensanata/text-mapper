@@ -88,8 +88,8 @@ sub run {
     $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
   }
   local $/ = undef;
-  $mapper->initialize(decode_utf8(<STDIN>));
-  print $mapper->svg;
+  $mapper->initialize(decode_utf8 <STDIN>);
+  print encode_utf8 $mapper->svg;
 }
 
 1;
