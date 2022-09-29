@@ -62,6 +62,7 @@ find files it needs to include.
 
 =cut
 
+has 'local_files';
 has 'dist_dir';
 has 'map';
 has 'regions' => sub { [] };
@@ -192,9 +193,14 @@ sub process {
       } elsif (not $self->seen->{$1}) {
 	my $location = $1;
 	$self->seen->{$location} = 1;
-	my $path = Mojo::File->new($self->dist_dir, $location);
-	if (index($location, '/') == -1 and -f $path) {
+	my $path;
+	if (index($location, '/') == -1 and -f ($path = Mojo::File->new($self->dist_dir, $location))) {
 	  # without a slash, it could be a file from dist_dir
+	  $log->debug("Reading $location");
+	  $self->process(split(/\n/, decode_utf8($path->slurp())));
+	} elsif ($self->local_files and -f ($path = Mojo::File->new($location))) {
+	  # it could also be a local file in the same directory, but only if
+	  # called from the render command (which sets local_files)
 	  $log->debug("Reading $location");
 	  $self->process(split(/\n/, decode_utf8($path->slurp())));
 	} elsif ($location =~ /^https?:/) {

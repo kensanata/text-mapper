@@ -83,9 +83,9 @@ sub run {
   warn "Unhandled arguments: @args\n" if @args;
   my $mapper;
   if ($square) {
-    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
+    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir, local_files => 1);
   } else {
-    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
+    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir, local_files => 1);
   }
   local $/ = undef;
   $mapper->initialize(decode_utf8 <STDIN>);
