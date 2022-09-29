@@ -266,21 +266,19 @@ sub svg_header {
   foreach my $region (@{$self->regions}) {
     $maxz = $region->z if $region->z > $maxz;
   }
-  # these are required to calculate the viewBox for the SVG
+  # These are required to calculate the viewBox for the SVG. Min and max X are
+  # what you would expect. Min and max Y are different, however, since we want
+  # to count all the rows on all the levels, plus an extra separator between
+  # them. Thus, min y is the min y of the first level, and max y is the min y of
+  # the first level + 1 for every level beyond the first, + all the rows for
+  # each level.
   my $min_x_overall;
   my $max_x_overall;
   my $min_y_overall;
-  # $max_y_overall is the last row of the SVG with all the levels: if there is
-  # just one hex, 010100, then the last row shown on the SVG is 0 (the first
-  # one); if there are two hexes beneath each other, 010100 and 010101, then the
-  # last row shown on the SVG is 2 (y=0 is for z=0, y=1 is the space between
-  # levels, and y=2 is for z=1); note that this would be the same if the two
-  # hexes were 020200 and 020202!
-  my $max_y_overall = 0;
+  my $max_y_overall;
   for my $z (0 .. $maxz) {
     my ($minx, $miny, $maxx, $maxy);
-    $max_y_overall += 1 if $z > 0;
-    $self->offset->[$z] = $max_y_overall;
+    $self->offset->[$z] = $max_y_overall // 0;
     foreach my $region (@{$self->regions}) {
       next unless $region->z == $z;
       $minx = $region->x unless defined $minx and $minx <= $region->x;
@@ -290,8 +288,10 @@ sub svg_header {
     }
     $min_x_overall = $minx unless defined $min_x_overall and $minx >= $min_x_overall;
     $max_x_overall = $maxx unless defined $min_y_overall and $maxx <= $max_x_overall;;
-    $min_y_overall = $miny unless defined $min_y_overall;
-    $max_y_overall += 1 + $maxy - $miny;
+    $min_y_overall = $miny unless defined $min_y_overall; # first row of the first level
+    $max_y_overall = $miny unless defined $max_y_overall; # also (!) first row of the first level
+    $max_y_overall += 1 if $z > 0; # plus a separator row for every extra level
+    $max_y_overall += 1 + $maxy - $miny; # plus the number of rows for every level
   }
   my ($vx1, $vy1, $vx2, $vy2) = $self->viewbox($min_x_overall, $min_y_overall, $max_x_overall, $max_y_overall);
   my ($width, $height) = ($vx2 - $vx1, $vy2 - $vy1);
