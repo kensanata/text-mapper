@@ -52,26 +52,31 @@ use Mojo::Util qw(url_escape);
 use Mojo::Base 'Game::TextMapper::Point';
 use Encode;
 
+sub pixels {
+  my ($self, $offset, $add_x, $add_y) = @_;
+  my $x = $self->x;
+  my $y = $self->y;
+  my $z = $self->z;
+  $y += $offset->[$z] if defined $offset->[$z];
+  $add_x //= 0;
+  $add_y //= 0;
+  return $x * $dy + $add_x, $y * $dy + $add_y;
+}
+
 sub svg_region {
   my ($self, $attributes, $offset) = @_;
   return sprintf(qq{    <rect id="square%s%s%s" x="%.1f" y="%.1f" width="%.1f" height="%.1f" %s />\n},
 		 $self->x, $self->y, $self->z != 0 ? $self->z : '', # z 0 is not printed at all for the $id
-		 ($self->x - 0.5) * $dy,
-		 ($self->y + $offset->[$self->z] - 0.5) * $dy,
+		 $self->pixels($offset, -0.5 * $dy, -0.5 * $dy),
 		 $dy, $dy, $attributes);
 }
 
 sub svg {
   my ($self, $offset) = @_;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
   my $data = '';
   for my $type (@{$self->type}) {
     $data .= sprintf(qq{    <use x="%.1f" y="%.1f" xlink:href="#%s" />\n},
-		     $x * $dy,
-		     $y * $dy, # square
+		     $self->pixels($offset),
 		     $type);
   }
   return $data;
@@ -85,9 +90,7 @@ sub svg_coordinates {
   $y += $offset->[$z];
   my $data = '';
   $data .= qq{    <text text-anchor="middle"};
-  $data .= sprintf(qq{ x="%.1f" y="%.1f"},
-		   $x * $dy,
-		   ($y - 0.4) * $dy); # square
+  $data .= sprintf(qq{ x="%.1f" y="%.1f"}, $self->pixels($offset, 0, -0.4 * $dy));
   $data .= ' ';
   $data .= $self->map->text_attributes || '';
   $data .= '>';
@@ -106,24 +109,16 @@ sub svg_label {
     }
   }
   $url =~ s/\%s/url_escape(encode_utf8($self->label))/e or $url .= url_escape(encode_utf8($self->label)) if $url;
-  my $x = $self->x;
-  my $y = $self->y;
-  my $z = $self->z;
-  $y += $offset->[$z];
-  my $data = sprintf(qq{    <g><text text-anchor="middle" x="%.1f" y="%.1f" %s %s>}
-                     . $self->label
-                     . qq{</text>},
-                     $x  * $dy,
-		     ($y + 0.4) * $dy, # square
+  my $data = sprintf(qq{    <g><text text-anchor="middle" x="%.1f" y="%.1f" %s %s>%s</text>},
+                     $self->pixels($offset, 0, 0.4 * $dy),
                      $attributes ||'',
-		     $self->map->glow_attributes ||'');
+		     $self->map->glow_attributes ||'',
+		     $self->label);
   $data .= qq{<a xlink:href="$url">} if $url;
-  $data .= sprintf(qq{<text text-anchor="middle" x="%.1f" y="%.1f" %s>}
-		   . $self->label
-		   . qq{</text>},
-		   $x * $dy,
-		   ($y + 0.4) * $dy, # square
-		   $attributes ||'');
+  $data .= sprintf(qq{<text text-anchor="middle" x="%.1f" y="%.1f" %s>%s</text>},
+		   $self->pixels($offset, 0, 0.4 * $dy),
+		   $attributes ||'',
+		   $self->label);
   $data .= qq{</a>} if $url;
   $data .= qq{</g>\n};
   return $data;
