@@ -1,5 +1,7 @@
 1.05
 
+- Add offset and alignment properties to lines (rivers, trails).
+
 - Fix viewbox coordinates, which is important if your map doesn't
   start with 0101.
 
