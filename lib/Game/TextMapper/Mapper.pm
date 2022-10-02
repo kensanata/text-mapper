@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2021  Alex Schroeder <alex@gnu.org>
+# Copyright (C) 2009-2022  Alex Schroeder <alex@gnu.org>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -134,27 +134,33 @@ sub process {
     if (/^(-?\d\d)(-?\d\d)(\d\d)?\s+(.*)/) {
       my $region = $self->make_region(x => $1, y => $2, z => $3||'00', map => $self);
       my $rest = $4;
-      while (my ($tag, $label, $size) = $rest =~ /\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)?/) {
+      while (my ($tag, $label, $size) = $rest =~ /\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)/) {
 	if ($tag eq 'name') {
 	  $region->label($label);
 	  $region->size($size);
 	}
 	$rest =~ s/\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)?//;
       }
-      while (my ($label, $size) = $rest =~ /["“]([^"”]+)["”]\s*(\d+)?/) {
-	$region->label($label);
-	$region->size($size);
-	$rest =~ s/["“]([^"”]+)["”]\s*(\d+)?//;
+      while (my ($label, $size, $transform) = $rest =~ /["“]([^"”]+)["”]\s*(\d+)?((?:\s*[a-z]+\([^\)]+\))*)/) {
+	if ($transform) {
+	  push(@{$self->other()}, $self->other_text($region, $label, $size, $transform));
+	} else {
+	  $region->label($label);
+	  $region->size($size);
+	}
+	$rest =~ s/["“]([^"”]+)["”]\s*(\d+)?((?:\s*[a-z]+\([^\)]+\))*)//;
       }
       my @types = split(/\s+/, $rest);
       $region->type(\@types);
       push(@{$self->regions}, $region);
       push(@{$self->things}, $region);
-    } elsif (/^(-?\d\d-?\d\d(?:\d\d)?(?:--?\d\d-?\d\d(?:\d\d)?)+)\s+(\S+)\s*(?:["“](.+)["”])?/) {
+    } elsif (/^(-?\d\d-?\d\d(?:\d\d)?(?:--?\d\d-?\d\d(?:\d\d)?)+)\s+(\S+)\s*(?:["“](.+)["”])?\s*(left|right)?\s*(\d+%)?/) {
       my $line = $self->make_line(map => $self);
       my $str = $1;
       $line->type($2);
       $line->label($3);
+      $line->side($4);
+      $line->start($5);
       $line->id('line' . $line_id++);
       my @points;
       while ($str =~ /\G(-?\d\d)(-?\d\d)(\d\d)?-?/cg) {
@@ -234,6 +240,23 @@ sub process {
     }
   }
   return $self;
+}
+
+# Very similar to svg_label, but given that we have a transformation, we
+# translate the object to it's final position.
+sub other_text {
+  my ($self, $region, $label, $size, $transform) = @_;
+  $transform = sprintf("translate(%.1f,%.1f)", $region->pixels($self->offset)) . $transform;
+  my $attributes = "transform=\"$transform\" " . $self->label_attributes;
+  if ($size and not $attributes =~ s/\bfont-size="\d+pt"/font-size="$size"/) {
+    $attributes .= " font-size=\"$size\"";
+  }
+  my $data = sprintf(qq{    <g><text text-anchor="middle" %s %s>%s</text>},
+                     $attributes, $self->glow_attributes||'', $label);
+  $data .= sprintf(qq{<text text-anchor="middle" %s>%s</text>},
+		   $attributes, $label);
+  $data .= qq{</g>\n};
+  return $data;
 }
 
 sub def {
