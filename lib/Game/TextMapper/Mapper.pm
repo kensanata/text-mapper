@@ -142,7 +142,7 @@ sub process {
 	$rest =~ s/\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)?//;
       }
       while (my ($label, $size, $transform) = $rest =~ /["“]([^"”]+)["”]\s*(\d+)?((?:\s*[a-z]+\([^\)]+\))*)/) {
-	if ($transform) {
+	if ($transform or $region->label) {
 	  push(@{$self->other()}, $self->other_text($region, $label, $size, $transform));
 	} else {
 	  $region->label($label);
