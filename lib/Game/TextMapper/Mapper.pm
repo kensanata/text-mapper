@@ -50,7 +50,8 @@ use Modern::Perl '2018';
 use Mojo::UserAgent;
 use Mojo::Base -base;
 use File::Slurper qw(read_text);
-use Encode qw(decode_utf8);
+use Encode qw(encode_utf8 decode_utf8);
+use Mojo::Util qw(url_escape);
 use File::ShareDir 'dist_dir';
 
 =head1 ATTRIBUTES
@@ -143,7 +144,8 @@ sub process {
       }
       while (my ($label, $size, $transform) = $rest =~ /["“]([^"”]+)["”]\s*(\d+)?((?:\s*[a-z]+\([^\)]+\))*)/) {
 	if ($transform or $region->label) {
-	  push(@{$self->other()}, $self->other_text($region, $label, $size, $transform));
+	  # delay the calling of $self->other_text because the URL or the $self->glow_attributes might not be set
+	  push(@{$self->other()}, sub () { $self->other_text($region, $label, $size, $transform) });
 	} else {
 	  $region->label($label);
 	  $region->size($size);
@@ -242,6 +244,20 @@ sub process {
   return $self;
 }
 
+sub svg_other {
+  my ($self) = @_;
+  my $data = "\n";
+  for my $other (@{$self->other()}) {
+    if (ref $other eq 'CODE') {
+      $data .= $other->();
+    } else {
+      $data .= $other;
+    }
+    $data .= "\n";
+  }
+  return $data;
+}
+
 # Very similar to svg_label, but given that we have a transformation, we
 # translate the object to it's final position.
 sub other_text {
@@ -253,8 +269,10 @@ sub other_text {
   }
   my $data = sprintf(qq{    <g><text text-anchor="middle" %s %s>%s</text>},
                      $attributes, $self->glow_attributes||'', $label);
-  $data .= sprintf(qq{<text text-anchor="middle" %s>%s</text>},
-		   $attributes, $label);
+  my $url = $self->url;
+  $url =~ s/\%s/url_escape(encode_utf8($label))/e or $url .= url_escape(encode_utf8($label)) if $url;
+  $data .= sprintf(qq{<a xlink:href="%s"><text text-anchor="middle" %s>%s</text></a>},
+		   $url, $attributes, $label);
   $data .= qq{</g>\n};
   return $data;
 }
@@ -465,7 +483,7 @@ sub svg {
   $doc .= $self->svg_line_labels();
   $doc .= $self->svg_labels();
   $doc .= $self->license() ||'';
-  $doc .= join("\n", @{$self->other()}) . "\n";
+  $doc .= $self->svg_other();
 
   # error messages
   my $y = 10;
