@@ -1152,7 +1152,7 @@ See L<Game::TextMapper::Schroeder::Alpine> for more information.
 
 =head3 Apocalypse
 
-The Alpine algorithm was developed by Alex Schroeder. See L<Hex describing the
+The Apocalypse algorithm was developed by Alex Schroeder. See L<Hex describing the
 post-apocalypse|https://alexschroeder.ch/wiki/2020-10-02_Hex_describing_the_post-apocalypse>
 for more information.
 
