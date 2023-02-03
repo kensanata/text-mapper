@@ -103,8 +103,9 @@ sub grow_mountains {
     $n = int($n);
     next if $n < 1;
     for (1 .. $n) {
-      # try to find an empty neighbor; abort after six attempts
-      for (1 .. 6) {
+      # try to find an empty neighbor; make more attempts if we're looking for
+      # more neighbours
+      for my $attempt (1 .. 3 + $n) {
 	my ($x, $y) = $self->neighbor($coordinates, $self->random_neighbor());
 	next unless $self->legal($x, $y);
 	my $other = coordinates($x, $y);
@@ -113,8 +114,12 @@ sub grow_mountains {
 	  ($x, $y) = $self->neighbor2($coordinates, $self->random_neighbor2());
 	  next unless $self->legal($x, $y);
 	  $other = coordinates($x, $y);
-	  # if this is also taken, try again
-	  next if $altitude->{$other};
+	  # if this is also taken, try again – but if we've already had four
+	  # attempts, jump!
+          if ($altitude->{$other}) {
+            $coordinates = $other if $attempt > 4;
+            next;
+          }
 	}
 	# if we found an empty neighbor, set its altitude
 	$altitude->{$other} = $current_altitude > 0 ? $current_altitude - 1 : 0;
@@ -938,6 +943,7 @@ sub generate_map {
   push(@lines, "# Seed: $seed");
   push(@lines, "# Documentation: " . $url) if $url;
   my $map = join("\n", @lines);
+  return $map, $self if wantarray;
   return $map;
 }
 

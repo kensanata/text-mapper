@@ -235,8 +235,12 @@ get '/alpine/document' => sub {
     $seed = int(rand(1000000000));
     $c->param('seed' => $seed);
   }
+  # We'd like to use a smaller map because it is so slow, so default to height 5.
+  $c->param('height' => 5) unless $c->param('height');
+  # Let's remember the $data so we can query it for the parameters used.
+  my ($map, $data);
   for my $step (1 .. 18) {
-    my $map = alpine_map($c, $step);
+    ($map, $data) = alpine_map($c, $step);
     my $mapper;
     if ($type eq 'hex') {
       $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
@@ -249,30 +253,18 @@ get '/alpine/document' => sub {
   };
   $c->stash("maps" => \@maps);
 
-  # The documentation needs all the defaults of Alpine::generate_map (but
-  # we'd like to use a smaller map because it is so slow).
-  my $width = $c->param('width') // 20;
-  my $height = $c->param('height') // 5; # instead of 10
-  my $steepness = $c->param('steepness') // 3;
-  my $peaks = $c->param('peaks') // int($width * $height / 40);
-  my $peak = $c->param('peak') // 10;
-  my $bumps = $c->param('bumps') // int($width * $height / 40);
-  my $bump = $c->param('bump') // 2;
-  my $bottom = $c->param('bottom') // 0;
-  my $arid = $c->param('arid') // 2;
-
   # Generate the documentation text based on the stashed maps.
   $c->render(template => 'alpine_document',
 	     seed => $seed,
-	     width => $width,
-	     height => $height,
-	     steepness => $steepness,
-	     peaks => $peaks,
-	     peak => $peak,
-	     bumps => $bumps,
-	     bump => $bump,
-	     bottom => $bottom,
-	     arid => $arid);
+	     width => $data->width,
+	     height => $data->height,
+	     steepness => $data->steepness,
+	     peaks => $data->peaks,
+	     peak => $data->peak,
+	     bumps => $data->bumps,
+	     bump => $data->bump,
+	     bottom => $data->bottom,
+	     arid => $data->arid);
 };
 
 get '/alpine/parameters' => sub {
@@ -1638,8 +1630,8 @@ When creating elevations, we surround each hex with a number of other hexes at
 one altitude level lower. The number of these surrounding lower levels is
 controlled by the <strong>steepness</strong> parameter (default 3). Lower means
 steeper. Floating points are allowed. Please note that the maximum numbers of
-neighbors considered is the 6 immediate neighbors and the 12 neighbors one step
-away.
+neighbours considered is the 6 immediate neighbours and the 12 neighbours one
+step away.
 </p>
 <p>
 Examples:
@@ -1709,11 +1701,11 @@ and edit it using
 
 <p>First, we pick <%= $peaks %> peaks and set their altitude to <%= $peak %>.
 Then we loop down to 1 and for every hex we added in the previous run, we add
-<%= $steepness %> neighbors at a lower altitude, if possible. We actually vary
-steepness, so the steepness given is just an average. We'll also consider
-neighbors one step away. If our random growth missed any hexes, we just copy the
-height of a neighbor. If we can't find a suitable neighbor within a few tries,
-just make a hole in the ground (altitude 0).</p>
+<%= $steepness %> neighbours at a lower altitude, if possible. We take fractions
+into account: 2.2 means we'll add 2 neighbours and there's a 20% we'll add a
+third. We'll also consider neighbours one step away. If our random growth missed
+any hexes, we just copy the height of a neighbour. If we can't find a suitable
+neighbour within a few tries, just make a hole in the ground (altitude 0).</p>
 
 <p>The number of peaks can be changed using the <em>peaks</em> parameter. Please
 note that 0 <em>peaks</em> will result in no land mass.</p>
@@ -1724,8 +1716,8 @@ sources for rivers.</p>
 
 <p>The number of adjacent hexes at a lower altitude can be changed using the
 <em>steepness</em> parameter. Floating points are allowed. Please note that the
-maximum numbers of neighbors considered is the 6 immediate neighbors and the 12
-neighbors one step away.</p>
+maximum numbers of neighbours considered is the 6 immediate neighbours and the
+12 neighbours one step away.</p>
 
 %== shift(@$maps)
 
@@ -1746,7 +1738,7 @@ regions at the same altitude.</p>
 %== shift(@$maps)
 
 <p>We determine the flow of water by having water flow to one of the lowest
-neighbors if possible. Water doesn't flow upward, and if there is already water
+neighbours if possible. Water doesn't flow upward, and if there is already water
 coming our way, then it won't flow back. It has reached a dead end.</p>
 
 %== shift(@$maps)
@@ -1759,9 +1751,9 @@ coming our way, then it won't flow back. It has reached a dead end.</p>
 "flooding" lakes, looking for a way to the edge of the map. If we're lucky, our
 search will soon hit upon a sequence of arrows that leads to ever lower
 altitudes and to the edge of the map. An outlet! We start with all the hexes
-that don't have an arrow. For each one of those, we look at its neighbors. These
-are our initial candidates. We keep expanding our list of candidates as we add
-at neighbors of neighbors. At every step we prefer the lowest of these
+that don't have an arrow. For each one of those, we look at its neighbours.
+These are our initial candidates. We keep expanding our list of candidates as we
+add at neighbours of neighbours. At every step we prefer the lowest of these
 candidates. Once we have reached the edge of the map, we backtrack and change
 any arrows pointing the wrong way.</p>
 
@@ -1795,7 +1787,7 @@ shadow.</p>
 
 %== shift(@$maps)
 
-<p>Any hex <em>with a river</em> that flows towards a neighbor at the same
+<p>Any hex <em>with a river</em> that flows towards a neighbour at the same
 altitude is insufficiently drained. These are marked as swamps. The background
 color of the swamp depends on the altitude: grey if altitude 6 and higher,
 otherwise dark-grey.</p>
@@ -1864,9 +1856,9 @@ city.</p>
 
 %== shift(@$maps)
 
-<p>Trails connect every settlement to any neighbor that is one or two hexes
-away. If no such neighbor can be found, we try to find neighbors that are three
-hexes away. If there are multiple options, we prefer the one at a lower
+<p>Trails connect every settlement to any neighbour that is one or two hexes
+away. If no such neighbour can be found, we try to find neighbours that are
+three hexes away. If there are multiple options, we prefer the one at a lower
 altitude.</p>
 
 %== shift(@$maps)
