@@ -1714,11 +1714,6 @@ note that 0 <em>peaks</em> will result in no land mass.</p>
 parameter. Please note that a <em>peak</em> smaller than 7 will result in no
 sources for rivers.</p>
 
-<p>The number of adjacent hexes at a lower altitude can be changed using the
-<em>steepness</em> parameter. Floating points are allowed. Please note that the
-maximum numbers of neighbours considered is the 6 immediate neighbours and the
-12 neighbours one step away.</p>
-
 %== shift(@$maps)
 
 <p>Next, we pick <%= $bumps %> bumps and shift their altitude by -<%= $bump %>,
