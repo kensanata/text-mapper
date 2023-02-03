@@ -132,7 +132,7 @@ sub process {
   my $self = shift;
   my $line_id = 0;
   foreach (@_) {
-    if (/^(-?\d\d)(-?\d\d)(\d\d)?\s+(.*)/) {
+    if (/^(-?\d\d)(-?\d\d)(\d\d)?\s+(.*)/ or /^(-?\d\d+)\.(-?\d\d+)(?:\.(\d\d+))?\s+(.*)/) {
       my $region = $self->make_region(x => $1, y => $2, z => $3||'00', map => $self);
       my $rest = $4;
       while (my ($tag, $label, $size) = $rest =~ /\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)/) {
@@ -156,7 +156,8 @@ sub process {
       $region->type(\@types);
       push(@{$self->regions}, $region);
       push(@{$self->things}, $region);
-    } elsif (/^(-?\d\d-?\d\d(?:\d\d)?(?:--?\d\d-?\d\d(?:\d\d)?)+)\s+(\S+)\s*(?:["“](.+)["”])?\s*(left|right)?\s*(\d+%)?/) {
+    } elsif (/^(-?\d\d-?\d\d(?:\d\d)?(?:--?\d\d-?\d\d(?:\d\d)?)+)\s+(\S+)\s*(?:["“](.+)["”])?\s*(left|right)?\s*(\d+%)?/
+             or /^(-?\d\d+\.-?\d\d+(?:\.\d\d+)?(?:--?\d\d+\.-?\d\d+(?:\.\d\d+)?)+)\s+(\S+)\s*(?:["“](.+)["”])?\s*(left|right)?\s*(\d+%)?/) {
       my $line = $self->make_line(map => $self);
       my $str = $1;
       $line->type($2);
@@ -165,8 +166,8 @@ sub process {
       $line->start($5);
       $line->id('line' . $line_id++);
       my @points;
-      while ($str =~ /\G(-?\d\d)(-?\d\d)(\d\d)?-?/cg) {
-	push(@points, Game::TextMapper::Point->new(x => $1, y => $2, z => $3||'00'));
+      while ($str =~ /\G(?:(-?\d\d)(-?\d\d)(\d\d)?|(-?\d\d+)\.(-?\d\d+)\.(\d\d+)?)-?/cg) {
+	push(@points, Game::TextMapper::Point->new(x => $1||$4, y => $2||$5, z => $3||$6||'00'));
       }
       $line->points(\@points);
       push(@{$self->lines}, $line);
