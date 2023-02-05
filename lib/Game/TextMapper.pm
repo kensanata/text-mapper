@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# Copyright (C) 2009-2022  Alex Schroeder <alex@gnu.org>
+# Copyright (C) 2009-2023  Alex Schroeder <alex@gnu.org>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -265,6 +265,21 @@ get '/alpine/document' => sub {
 	     bump => $data->bump,
 	     bottom => $data->bottom,
 	     arid => $data->arid);
+};
+
+get '/alpine/random/interactive' => sub {
+  my $c = shift;
+  my $map = alpine_map($c);
+  my $type = $c->param('type') // 'hex';
+  my $mapper;
+  if ($type eq 'hex') {
+    $mapper = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir);
+  } else {
+    $mapper = Game::TextMapper::Mapper::Square->new(dist_dir => $dist_dir);
+  }
+  my $svg = $mapper->initialize($map)->svg;
+  $c->render(template => 'alpine_interactive',
+             map => $svg);
 };
 
 get '/alpine/parameters' => sub {
@@ -1461,7 +1476,8 @@ Schroeder's algorithm that's trying to recreate a medieval Swiss landscape, with
 no info to back it up, whatsoever. See it
 <%= link_to url_for('alpinedocument')->query(height => 5) => begin %>documented<% end %>.
 Click the submit button to generate the map itself. Or just keep reloading
-<%= link_to alpinerandom => begin %>this link<% end %>.
+<%= link_to alpinerandom => begin %>this link<% end %>, or try this this
+<%= link_to alpinerandominteractive => begin %>more interactive page<% end %>.
 You'll find the map description in a comment within the SVG file.
 </p>
 %= form_for alpine => begin
@@ -1865,6 +1881,51 @@ marshes. We also check the next hex along the (invisible) river to check if this
 an ocean hex. If it is, we change it to water.
 
 %== shift(@$maps)
+
+
+@@ alpine_interactive.html.ep
+% layout 'default';
+% title 'Alpine Interaction';
+<h1>Alpine Interaction</h1>
+
+%== $map
+
+%= form_for alpinerandominteractive => begin
+<table>
+<tr><td>Width:</td><td>
+%= number_field width => 20, min => 5, max => 99
+</td><td>Bottom:</td><td>
+%= number_field bottom => 0, min => 0, max => 10
+</td><td>Peaks:</td><td>
+%= number_field peaks => 5, min => 0, max => 20
+</td><td>Bumps:</td><td>
+%= number_field bumps => 2, min => 0, max => 20
+</td></tr><tr><td>Height:</td><td>
+%= number_field height => 10, min => 5, max => 99
+</td><td>Steepness:</td><td>
+%= number_field steepness => 3, min => 1, max => 20, step => 0.1
+</td><td>Peak:</td><td>
+%= number_field peak => 10, min => 7, max => 10
+</td><td>Bump:</td><td>
+%= number_field bump => 2, min => 1, max => 2
+</td></tr><tr><td>Arid:</td><td>
+%= number_field arid => 2, min => 0, max => 2, step => 0.1
+</td><td><td>
+</td><td></td><td>
+</td></tr></table>
+<p>
+See the <%= link_to alpineparameters => begin %>documentation<% end %> for an
+explanation of what these parameters do. See it
+<%= link_to url_for('alpinedocument')->query(height => param('height')) => begin %>documented<% end %>.
+<p>
+%= radio_button type => 'hex', id => 'hex', checked => undef
+%= label_for hex => 'Hex'
+%= radio_button type => 'square', id => 'square'
+%= label_for square => 'Square'
+<p>
+%= submit_button "Generate Map"
+</p>
+% end
 
 @@ layouts/default.html.ep
 <!DOCTYPE html>
