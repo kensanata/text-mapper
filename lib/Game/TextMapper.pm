@@ -1892,14 +1892,15 @@ an ocean hex. If it is, we change it to water.
 %= form_for alpinerandominteractive => begin
 <table>
 <tr><td>Width:</td><td>
-%= number_field width => 20, min => 5, max => 99
+%= number_field width => 30, min => 5, max => 99
 </td><td>Bottom:</td><td>
 %= number_field bottom => 0, min => 0, max => 10
 </td><td>Peaks:</td><td>
 %= number_field peaks => 5, min => 0, max => 20
 </td><td>Bumps:</td><td>
 %= number_field bumps => 2, min => 0, max => 20
-</td></tr><tr><td>Height:</td><td>
+</td></tr>
+<tr><td>Height:</td><td>
 %= number_field height => 10, min => 5, max => 99
 </td><td>Steepness:</td><td>
 %= number_field steepness => 3, min => 1, max => 20, step => 0.1
@@ -1907,10 +1908,13 @@ an ocean hex. If it is, we change it to water.
 %= number_field peak => 10, min => 7, max => 10
 </td><td>Bump:</td><td>
 %= number_field bump => 2, min => 1, max => 2
-</td></tr><tr><td>Arid:</td><td>
+</td></tr>
+<tr><td>Arid:</td><td>
 %= number_field arid => 2, min => 0, max => 2, step => 0.1
-</td><td><td>
-</td><td></td><td>
+</td><td>Step:</td><td>
+%= number_field step => undef, min => 1, max => 20
+</td><td>Desert:</td><td>
+%= check_box desert => 0
 </td></tr></table>
 <p>
 See the <%= link_to alpineparameters => begin %>documentation<% end %> for an
