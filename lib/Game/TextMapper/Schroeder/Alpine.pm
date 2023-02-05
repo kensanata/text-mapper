@@ -61,6 +61,7 @@ has 'bumps';
 has 'bump';
 has 'bottom';
 has 'arid';
+has 'climate';
 has 'wind';
 
 sub place_peak {
@@ -837,12 +838,14 @@ sub marshlands {
 
 sub desertification {
   my ($self, $world, $rivers) = @_;
+  return unless $self->climate eq 'desert';
   for my $coordinates (keys %$world) {
     if ($self->with_river($rivers, $coordinates)) {
       $world->{$coordinates} =~ s/light-grey/light-green/
     } else {
       $world->{$coordinates} =~ s/light-green bushes/sand bushes/
           or $world->{$coordinates} =~ s/light-grey grass/sand grass/
+          or $world->{$coordinates} =~ s/dark-grey grass/sand bush/
           or $world->{$coordinates} =~ s/^grey grass/dust grass/
           or $world->{$coordinates} =~ s/light-grey desert/dust desert/
     }
@@ -931,6 +934,7 @@ sub generate_map {
   $self->bump(shift // 2);
   $self->bottom(shift // 0);
   $self->arid(shift // 2);
+  $self->climate(shift ? 'desert' : 'temperate');
   $self->wind(shift); # or random
   my $seed = shift||time;
   my $url = shift;
