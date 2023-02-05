@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2021  Alex Schroeder <alex@gnu.org>
+# Copyright (C) 2009-2023  Alex Schroeder <alex@gnu.org>
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
@@ -641,7 +641,7 @@ sub bogs {
 }
 
 sub dry {
-  my ($self, $world, $altitude) = @_;
+  my ($self, $world, $altitude, $rivers) = @_;
   my @dry;
   for my $coordinates (shuffle sort keys %$world) {
     if ($world->{$coordinates} !~ /mountain|hill|water|ocean|swamp|grass|forest|firs|trees/) {
@@ -653,26 +653,46 @@ sub dry {
       }
     }
   }
-  return unless @dry;
-  # dry some of them up
-  my @seeds = @dry[0..@dry/4];
-  for my $coordinates (@seeds) {
-    $self->drier($world, $coordinates);
+
+ BUSHES:
+  for my $coordinates (@dry) {
     for my $i ($self->neighbors()) {
       my ($x, $y) = $self->neighbor($coordinates, $i);
       next unless $self->legal($x, $y);
       my $other = coordinates($x, $y);
-      $self->drier($world, $other);
+      next BUSHES if $world->{$other} =~ /forest|firs|trees|swamp/;
+    }
+    if ($altitude->{$coordinates} >= 5) {
+      $world->{$coordinates} =~ s/light-green bushes/light-grey grass/;
+    } elsif ($altitude->{$coordinates} >= 3) {
+      $world->{$coordinates} =~ s/light-green bushes/grey grass/;
+    } else {
+      $world->{$coordinates} =~ s/light-green bushes/dark-grey grass/;
+    }
+  }
+
+ GRASS:
+  for my $coordinates (@dry) {
+    next if $self->with_river($rivers, $coordinates);
+    for my $i ($self->neighbors()) {
+      my ($x, $y) = $self->neighbor($coordinates, $i);
+      next unless $self->legal($x, $y);
+      my $other = coordinates($x, $y);
+      next GRASS if $world->{$other} !~ /grass|desert|water/;
+    }
+    if ($altitude->{$coordinates} >= 3) {
+      $world->{$coordinates} =~ s/(light-|dark-)?grey grass/light-grey desert/;
+    } else {
+      $world->{$coordinates} =~ s/(light-|dark-)?grey grass/dust desert/;
     }
   }
 }
 
-sub drier {
-  my ($self, $world, $coordinates) = @_;
-  $world->{$coordinates} =~ s/light-green bushes/light-green grass/
-      or $world->{$coordinates} =~ s/light-green grass/dust grass/
-      or $world->{$coordinates} =~ s/dust grass/dust hill/
-      or $world->{$coordinates} =~ s/dust hill/dust desert/;
+sub with_river {
+  my ($self, $rivers, $coordinates) = @_;
+  for my $river (@$rivers) {
+    return 1 if grep { $coordinates eq $_ } (@$river);
+  }
 }
 
 sub settlements {
@@ -836,7 +856,7 @@ sub generate {
     sub { $self->canyons($world, $altitude, $rivers, $canyons, $dry); },
     sub { $self->swamps($world, $altitude, $water, $flow, $dry); },
     sub { $self->forests($world, $altitude, $flow, $dry); },
-    sub { $self->dry($world, $altitude); },
+    sub { $self->dry($world, $altitude, $rivers); },
     sub { $self->cliffs($world, $altitude); },
     sub { push(@$settlements, $self->settlements($world, $flow)); },
     sub { push(@$trails, $self->trails($altitude, $settlements)); },

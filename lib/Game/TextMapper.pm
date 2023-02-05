@@ -1824,11 +1824,10 @@ url_with('alpinedocument')->query({peaks => 1}) => begin %>lonely mountain<% end
 <p>Any remaining hexes have no water nearby and are considered to be little more
 arid. At high altitudes, they get "light-grey grass"; at lower altitudes they
 get "light-green bushes". For these lower altitude badlands, we add more variety
-by simulating areas where conditions are bad. We pick a quarter of these hexes,
-and deteriorate them, and their immediate neighbours. That is, we take little
-"circles" of seven hexes each, and place them in these areas. Whenever they
-overlap, conditions deteriorate even further: light-green bushes → light-green
-grass → dust grass → dust hill → dust desert.</p>
+by simulating areas where conditions are bad: If they don't have contact with
+some sort of trees or swamp, the bushes turn to grass, and if the grass is only
+surrounded by grass, desert, or water, it turns to light-grey desert if altitude
+is ≥ 3, otherwise to dust desert.</p>
 
 <p>You probably need fewer peaks on your map to verify this (a <%= link_to
 url_with('alpinedocument')->query({peaks => 1}) => begin %>lonely mountain<% end
