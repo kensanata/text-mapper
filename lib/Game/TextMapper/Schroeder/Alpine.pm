@@ -837,24 +837,20 @@ sub marshlands {
 }
 
 sub desertification {
-  my ($self, $world, $rivers) = @_;
+  my ($self, $world, $altitude, $rivers) = @_;
   return unless $self->climate eq 'desert';
   for my $coordinates (keys %$world) {
     if ($self->with_river($rivers, $coordinates)) {
       $world->{$coordinates} =~ s/light-grey/light-green/
+          or $world->{$coordinates} =~ s/dark-green/green/
     } else {
-      $world->{$coordinates} =~ s/light-green bushes/sand bushes/
-          or $world->{$coordinates} =~ s/light-grey grass/sand grass/
-          or $world->{$coordinates} =~ s/dark-grey grass/sand bush/
-          or $world->{$coordinates} =~ s/^grey grass/dust grass/
-          or $world->{$coordinates} =~ s/light-grey desert/dust desert/
+      $world->{$coordinates} =~ s/light-green bushes/rock bushes/
+          or $world->{$coordinates} =~ s/light-grey grass/rock bush/
+          or $world->{$coordinates} =~ s/dark-grey grass/dark-soil bush/
+          or $world->{$coordinates} =~ s/^grey grass/rock bush/
+          or $altitude->{$coordinates} >= 4 and $world->{$coordinates} =~ s/light-grey desert/dark-soil desert/
+          or $altitude->{$coordinates} >= 2 and $world->{$coordinates} =~ s/(dust|light-grey) desert/light-grey desert/
     }
-    # $world->{$coordinates} =~ s/dust/dust/
-        #or $world->{$coordinates} =~ s/light-green bushes/sand bushes/
-        #or not $self->with_river($rivers, $coordinates) and $world->{$coordinates} =~ s/light-grey grass/sand grass/
-        # or $world->{$coordinates} =~ s/grey grass/sand grass/
-        #or $world->{$coordinates} =~ s/dark-green trees/light-green bushes/
-        #or $world->{$coordinates} =~ s/green trees/light-green bushes/
      $world->{$coordinates} =~ s/dark-grey swamp2?/light-green bushes/
         or $world->{$coordinates} =~ s/^grey swamp2?/light-grey bushes/
         or $world->{$coordinates} =~ s/fir-forest/trees/
@@ -888,7 +884,7 @@ sub generate {
     sub { push(@$settlements, $self->settlements($world, $flow)); },
     sub { push(@$trails, $self->trails($altitude, $settlements)); },
     sub { $self->marshlands($world, $altitude, $rivers); },
-    sub { $self->desertification($world, $rivers); },
+    sub { $self->desertification($world, $altitude, $rivers); },
     # make sure you look at "alpine_document.html.ep" if you change this list!
     # make sure you look at '/alpine/document' if you add to this list!
       );
