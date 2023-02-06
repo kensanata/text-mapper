@@ -177,13 +177,12 @@ sub alpine_map {
 		$c->param('bump'),
 		$c->param('bottom'),
 		$c->param('arid'),
-		$c->param('desert'),
+		$c->param('climate'),
 		$c->param('wind'),
 		$seed,
 		$url,
 		$step,
       );
-  $log->error("Climate: @params");
   my $type = $c->param('type') // 'hex';
   if ($type eq 'hex') {
     return Game::TextMapper::Schroeder::Alpine
@@ -241,7 +240,7 @@ get '/alpine/document' => sub {
   $c->param('height' => 5) unless $c->param('height');
   # Let's remember the $data so we can query it for the parameters used.
   my ($map, $data);
-  for my $step (1 .. 18) {
+  for my $step (1 .. 19) {
     ($map, $data) = alpine_map($c, $step);
     my $mapper;
     if ($type eq 'hex') {
@@ -267,7 +266,7 @@ get '/alpine/document' => sub {
 	     bump => $data->bump,
 	     bottom => $data->bottom,
 	     arid => $data->arid,
-	     desert => $data->desert);
+	     climate => $data->climate);
 };
 
 get '/alpine/random/interactive' => sub {
@@ -1504,7 +1503,7 @@ You'll find the map description in a comment within the SVG file.
 </td></tr><tr><td>Arid:</td><td>
 %= number_field arid => 2, min => 0, max => 2
 </td><td>Desert:</td><td>
-%= check_box desert => 1
+%= check_box climate => 'desert'
 </td></tr></table>
 <p>
 See the <%= link_to alpineparameters => begin %>documentation<% end %> for an
@@ -1702,11 +1701,11 @@ Examples:
 <%= link_to url_for('alpinerandom')->query(height => 10, width => 15, peaks => 2, steepness => 2, arid => 0) => begin %>very arid<% end %>
 </p>
 <p>
-The <strong>desert</strong> flag tries to turn it all into a desert. Works well
+The <strong>climate</strong> flag tries to turn it all into a desert. Works well
 with low hills, a higher steepness, an arid value of 0, and fewer peaks.
 </p>
 Example:
-<%= link_to url_for('alpinerandom')->query(height => 6, width => 30, peaks => 3, peak => 7, steepness => 5, arid => 0, desert => 1) => begin %>Australian desert<% end %>
+<%= link_to url_for('alpinerandom')->query(height => 6, width => 30, peaks => 3, peak => 7, steepness => 5, arid => 0, climate => 'desert') => begin %>Australian desert<% end %>
 </p>
 
 
@@ -1716,11 +1715,11 @@ Example:
 <h1>Alpine Map: How does it get created?</h1>
 
 <p>How do we get to the following map?
-<%= link_to url_for('alpinedocument')->query(width => $width, height => $height, steepness => $steepness, peaks => $peaks, peak => $peak, bumps => $bumps, bump => $bump, bottom => $bottom, arid => $arid, desert => $desert) => begin %>Reload<% end %>
+<%= link_to url_for('alpinedocument')->query(width => $width, height => $height, steepness => $steepness, peaks => $peaks, peak => $peak, bumps => $bumps, bump => $bump, bottom => $bottom, arid => $arid, climate => $climate) => begin %>Reload<% end %>
 to get a different one. If you like this particular map, bookmark
-<%= link_to url_for('alpinerandom')->query(seed => $seed, width => $width, height => $height, steepness => $steepness, peaks => $peaks, peak => $peak, bumps => $bumps, bump => $bump, bottom => $bottom, arid => $arid, desert => $desert) => begin %>this link<% end %>,
+<%= link_to url_for('alpinerandom')->query(seed => $seed, width => $width, height => $height, steepness => $steepness, peaks => $peaks, peak => $peak, bumps => $bumps, bump => $bump, bottom => $bottom, arid => $arid, climate => $climate) => begin %>this link<% end %>,
 and edit it using
-<%= link_to url_for('alpine')->query(seed => $seed, width => $width, height => $height, steepness => $steepness, peaks => $peaks, peak => $peak, bumps => $bumps, bump => $bump, bottom => $bottom, arid => $arid, desert => $desert) => begin %>this link<% end %>,
+<%= link_to url_for('alpine')->query(seed => $seed, width => $width, height => $height, steepness => $steepness, peaks => $peaks, peak => $peak, bumps => $bumps, bump => $bump, bottom => $bottom, arid => $arid, climate => $climate) => begin %>this link<% end %>,
 </p>
 
 %== $maps->[$#$maps]
@@ -1883,11 +1882,16 @@ altitude.</p>
 
 %== shift(@$maps)
 
-<p>Finally, we take advantage of the fact that rivers continue into the ocean.
-We identify river mouths where the altitude change is just 1 (i.e. no cliff) and
+<p>We take advantage of the fact that rivers continue into the ocean. We
+identify river mouths where the altitude change is just 1 (i.e. no cliff) and
 extend the land into the water using a blue-green swamp. These are coastal
 marshes. We also check the next hex along the (invisible) river to check if this
 an ocean hex. If it is, we change it to water.
+
+%== shift(@$maps)
+
+<p>If the climate is set to "desert", we try a desertification by search and
+replace operation to use more reds, to use more bushland, to use more desert.
 
 %== shift(@$maps)
 
@@ -1924,12 +1928,12 @@ an ocean hex. If it is, we change it to water.
 </td><td>Step:</td><td>
 %= number_field step => undef, min => 1, max => 20
 </td><td>Desert:</td><td>
-%= check_box desert => 1
+%= check_box climate => 'desert'
 </td></tr></table>
 <p>
 See the <%= link_to alpineparameters => begin %>documentation<% end %> for an
 explanation of what these parameters do. See it
-<%= link_to url_for('alpinedocument')->query(height => param('height')) => begin %>documented<% end %>.
+<%= link_to url_with('alpinedocument') => begin %>documented<% end %>.
 <p>
 %= radio_button type => 'hex', id => 'hex', checked => undef
 %= label_for hex => 'Hex'
