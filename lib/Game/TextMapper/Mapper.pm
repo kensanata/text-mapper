@@ -135,11 +135,14 @@ sub process {
     if (/^(-?\d\d)(-?\d\d)(\d\d)?\s+(.*)/ or /^(-?\d\d+)\.(-?\d\d+)(?:\.(\d\d+))?\s+(.*)/) {
       my $region = $self->make_region(x => $1, y => $2, z => $3||'00', map => $self);
       my $rest = $4;
-      while (my ($tag, $label, $size) = $rest =~ /\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)/) {
+      while (my ($tag, $label, $size) = $rest =~ /\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)?/) {
 	if ($tag eq 'name') {
 	  $region->label($label);
-	  $region->size($size);
-	}
+          $region->size($size) if $size;
+	} else {
+	  # delay the calling of $self->other_info because the URL or the $self->glow_attributes might not be set
+	  push(@{$self->other()}, sub () { $self->other_info($region, $label, $size, "translate(0,45)", 'opacity="0.2"') });
+        }
 	$rest =~ s/\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)?//;
       }
       while (my ($label, $size, $transform) = $rest =~ /["“]([^"”]+)["”]\s*(\d+)?((?:\s*[a-z]+\([^\)]+\))*)/) {
@@ -275,6 +278,20 @@ sub other_text {
   $data .= sprintf(qq{<a xlink:href="%s"><text text-anchor="middle" %s>%s</text></a>},
 		   $url, $attributes, $label);
   $data .= qq{</g>\n};
+  return $data;
+}
+
+# Very similar to other_text, but without a link and we have extra attributes
+sub other_info {
+  my ($self, $region, $label, $size, $transform, $attributes) = @_;
+  $transform = sprintf("translate(%.1f,%.1f)", $region->pixels($self->offset)) . $transform;
+  $attributes .= " transform=\"$transform\"";
+  $attributes .= " " . $self->label_attributes if $self->label_attributes;
+  if ($size and not $attributes =~ s/\bfont-size="\d+pt"/font-size="$size"/) {
+    $attributes .= " font-size=\"$size\"";
+  }
+  my $data = sprintf(qq{    <g><text text-anchor="middle" %s %s>%s</text>}, $attributes, $self->glow_attributes||'', $label);
+  $data .= sprintf(qq{<text text-anchor="middle" %s>%s</text></g>\n}, $attributes, $label);
   return $data;
 }
 
