@@ -30,6 +30,7 @@ use Game::TextMapper::Schroeder::Alpine;
 use Game::TextMapper::Schroeder::Archipelago;
 use Game::TextMapper::Schroeder::Island;
 use Game::TextMapper::Traveller;
+use Game::TextMapper::Folkesten;
 
 use Modern::Perl '2018';
 use Mojolicious::Lite;
@@ -287,6 +288,31 @@ get '/alpine/random/interactive' => sub {
 get '/alpine/parameters' => sub {
   my $c = shift;
   $c->render(template => 'alpine_parameters');
+};
+
+get '/folkesten' => sub {
+  my $c = shift;
+  if ($c->stash('format')||'' eq 'txt') {
+    $c->render(text => Game::TextMapper::Folkesten->new->generate_map());
+  } else {
+    $c->render(template => 'edit',
+	       map => Game::TextMapper::Folkesten->new->generate_map());
+  }
+};
+
+get '/folkesten/random' => sub {
+  my $c = shift;
+  my $map = Game::TextMapper::Folkesten->new->generate_map();
+  my $svg = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir)
+      ->initialize($map)
+      ->svg();
+  $c->render(text => $svg, format => 'svg');
+};
+
+get '/folkesten/random/text' => sub {
+  my $c = shift;
+  my $text = Game::TextMapper::Folkesten->new->generate_map();
+  $c->render(text => $text, format => 'txt');
 };
 
 # does not handle z coordinates
@@ -962,6 +988,17 @@ L<https://campaignwiki.org/contrib/default.txt>
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+forgotten-depths.txt>
 
+=head3 Bright library
+
+Example data:
+L<https://campaignwiki.org/contrib/bright-example.txt>
+
+Library:
+L<https://campaignwiki.org/contrib/bright.txt>
+
+Result:
+L<https://campaignwiki.org/text-mapper?map=include+bright-example.txt>
+
 =head3 Gnomeyland library
 
 Example data:
@@ -1590,6 +1627,9 @@ You'll find the map description in a comment within the SVG file.
 <hr>
 
 <p>Ideas and work in progress…
+
+<p><%= link_to url_for('folkesten') => begin %>Folkesten<% end %> generates a 10×10 map.
+Reload <%= link_to url_for('folkestenrandom') => begin %>Hex Terrain<% end %>.
 
 <p><%= link_to url_for('island') => begin %>Island<% end %> generates a hotspot-inspired island chain.
 Reload <%= link_to url_for('islandrandom') => begin %>Hex Island<% end %>
