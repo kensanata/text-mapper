@@ -1,3 +1,7 @@
+1.06
+
+- Add Falkesten algorithm.
+
 1.05
 
 - Add offset and alignment properties to lines (rivers, trails).

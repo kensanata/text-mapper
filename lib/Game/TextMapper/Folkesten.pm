@@ -306,7 +306,6 @@ sub generate_rivers {
   my $self = shift;
   my %seen;
   local $" = "-";
-  say "Rivers!";
   for my $hex (grep { $self->world->{$_} eq 'mountain' } sort keys %{$self->world}) {
     next if $seen{$hex};
     my $river = [$hex];
