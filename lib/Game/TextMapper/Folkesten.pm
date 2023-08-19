@@ -388,8 +388,25 @@ sub generate_canyons {
     my $current_altitude = $self->altitude->{$self->world->{$last}};
     $log->debug("Looking at @$river ($current_altitude)");
     for my $hex (@$river) {
-      next if $seen{$hex};
-      $seen{$hex} = 1;
+      if ($seen{$hex}) {
+        if (@$canyon == 0) {
+          last;
+        } elsif ($seen{$hex} == 1) {
+          push(@$canyon, $hex);
+          push(@{$self->canyons}, $canyon);
+          $canyon = [];
+          $log->debug(" ending cayon at known $hex");
+          $current_altitude = $self->altitude->{$self->world->{$hex}};
+          next;
+        } elsif ($seen{$hex} > 1) {
+          push(@{$self->canyons}, $canyon);
+          $canyon = [];
+          $log->debug(" merging cayon at $hex");
+          # FIXME
+          last;
+        }
+      }
+      $seen{$hex}++;
       if ($self->legal($hex) and $self->altitude->{$self->world->{$hex}} > $current_altitude) {
         if (@$canyon > 0) {
           push(@$canyon, $hex);
@@ -398,6 +415,7 @@ sub generate_canyons {
           $canyon = [$last, $hex];
           $log->debug("Starting cayon @$canyon");
         }
+        $seen{$hex}++; # more than 1 means this is inside a canyon
       } elsif (@$canyon > 0) {
         push(@$canyon, $hex);
         push(@{$self->canyons}, $canyon);
@@ -490,6 +508,22 @@ sub generate_forest {
   }
 }
 
+=head2 generate_swamp
+
+A 1 in 6 chance on every plain river hex that isn't next to a dry hex.
+
+=cut
+
+sub generate_swamp {
+  my $self = shift;
+  for my $hex (grep { $self->world->{$_} eq 'plain' and $self->wet->{$_} } sort keys %{$self->world}) {
+    next if any { $self->dry->{$_} } $self->all_neighbors($hex);
+    if (rand() < 1/6) {
+      $self->world->{$hex} = 'swamp';
+    }
+  }
+}
+
 =head2 generate_islands
 
 Every ocean hex has a 1 in 6 chance of having an island.
@@ -533,6 +567,7 @@ sub generate_map {
   $self->generate_canyons();
   $self->generate_dry();
   $self->generate_forest();
+  $self->generate_swamp();
   $self->generate_islands();
   return $self->string() . "\n"
       . "include bright.txt\n";

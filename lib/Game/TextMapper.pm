@@ -1626,10 +1626,12 @@ You'll find the map description in a comment within the SVG file.
 
 <hr>
 
-<p>Ideas and work in progress…
+<p><%= link_to url_for('folkesten') => begin %>Folkesten<% end %> generates a 10×10 map based on Andreas Folkesten's blog post, <a href="http://arch-brick.blogspot.com/2023/08/hexmap-terrain-generator.html">Hexmap Terrain Generator</a>.
+Or just keep reloading <%= link_to url_for('folkestenrandom') => begin %>this link<% end %>.
 
-<p><%= link_to url_for('folkesten') => begin %>Folkesten<% end %> generates a 10×10 map.
-Reload <%= link_to url_for('folkestenrandom') => begin %>Hex Terrain<% end %>.
+<hr>
+
+<p>Ideas and work in progress…
 
 <p><%= link_to url_for('island') => begin %>Island<% end %> generates a hotspot-inspired island chain.
 Reload <%= link_to url_for('islandrandom') => begin %>Hex Island<% end %>
