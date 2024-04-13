@@ -23,6 +23,7 @@ lib/Game/TextMapper/Schroeder/Hex.pm
 lib/Game/TextMapper/Schroeder/Island.pm
 lib/Game/TextMapper/Schroeder/Square.pm
 lib/Game/TextMapper/Smale.pm
+lib/Game/TextMapper/Solo.pm
 lib/Game/TextMapper/Traveller.pm
 LICENSE
 Makefile.PL

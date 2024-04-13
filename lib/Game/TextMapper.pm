@@ -31,6 +31,7 @@ use Game::TextMapper::Schroeder::Archipelago;
 use Game::TextMapper::Schroeder::Island;
 use Game::TextMapper::Traveller;
 use Game::TextMapper::Folkesten;
+use Game::TextMapper::Solo;
 
 use Modern::Perl '2018';
 use Mojolicious::Lite;
@@ -312,6 +313,31 @@ get '/folkesten/random' => sub {
 get '/folkesten/random/text' => sub {
   my $c = shift;
   my $text = Game::TextMapper::Folkesten->new->generate_map();
+  $c->render(text => $text, format => 'txt');
+};
+
+get '/solo' => sub {
+  my $c = shift;
+  if ($c->stash('format')||'' eq 'txt') {
+    $c->render(text => Game::TextMapper::Solo->new->generate_map());
+  } else {
+    $c->render(template => 'edit',
+	       map => Game::TextMapper::Solo->new->generate_map());
+  }
+};
+
+get '/solo/random' => sub {
+  my $c = shift;
+  my $map = Game::TextMapper::Solo->new->generate_map();
+  my $svg = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir)
+      ->initialize($map)
+      ->svg();
+  $c->render(text => $svg, format => 'svg');
+};
+
+get '/solo/random/text' => sub {
+  my $c = shift;
+  my $text = Game::TextMapper::Solo->new->generate_map();
   $c->render(text => $text, format => 'txt');
 };
 
@@ -1628,6 +1654,11 @@ You'll find the map description in a comment within the SVG file.
 
 <p><%= link_to url_for('folkesten') => begin %>Folkesten<% end %> generates a 10×10 map based on Andreas Folkesten's blog post, <a href="http://arch-brick.blogspot.com/2023/08/hexmap-terrain-generator.html">Hexmap Terrain Generator</a>.
 Or just keep reloading <%= link_to url_for('folkestenrandom') => begin %>this link<% end %>.
+
+<hr>
+
+<p><%= link_to url_for('solo') => begin %>Solo<% end %> generates a map based on a semi-random walk by a party through the wilderness, exploring as it goes.
+Or just keep reloading <%= link_to url_for('solorandom') => begin %>this link<% end %>.
 
 <hr>
 
