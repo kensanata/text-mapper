@@ -37,7 +37,7 @@ features such that no terrible geographical problems arise.
 package Game::TextMapper::Solo;
 use Game::TextMapper::Log;
 use Modern::Perl '2018';
-use List::Util qw(shuffle any);
+use List::Util qw(shuffle any none);
 use Mojo::Base -base;
 
 my $log = Game::TextMapper::Log->get;
@@ -99,6 +99,7 @@ sub generate_map {
   # my @walks = @$walks;
   # @walks = @walks[0 .. 10];
   # $self->trails(\@walks);
+  $self->add_rivers();
   return $self->to_text();
 }
 
@@ -153,16 +154,17 @@ sub random_tile {
   my ($self, $from, $to) = @_;
   my $roll = roll_2d6();
   my $altitude = $self->adjust_altitude($roll, $from, $to);
-  $self->add_flow($to);
+  $self->add_flow($to, ($roll >= 5 and $roll <= 8));
+  my $wet = defined $self->flows->[$to];
   my $tile;
   if    ($altitude == 0) { $tile = 'ocean' }
   elsif ($altitude == 1) { $tile = 'coastal' }
-  elsif ($altitude == 2) { $tile = 'desert' }
-  elsif ($altitude == 3) { $tile = 'desert' }
-  elsif ($altitude == 4) { $tile = 'desert' }
-  elsif ($altitude == 5) { $tile = 'desert' }
-  elsif ($altitude == 6) { $tile = 'desert' }
-  elsif ($altitude == 7) { $tile = 'hills' }
+  elsif ($altitude == 2) { $tile = $wet ? 'swamp' : 'desert' }
+  elsif ($altitude == 3) { $tile = $wet ? 'swamp' : 'plain' }
+  elsif ($altitude == 4) { $tile = $wet ? 'forest' : 'plain' }
+  elsif ($altitude == 5) { $tile = $wet ? 'forest' : 'plain' }
+  elsif ($altitude == 6) { $tile = $wet ? 'forest-hill' : 'rough' }
+  elsif ($altitude == 7) { $tile = $wet ? 'green-hills' : 'hills' }
   elsif ($altitude == 8) { $tile = 'mountains' }
   elsif ($altitude == 9) { $tile = special() ? 'volcano' : 'mountain' }
   else                   { $tile = 'ice' }
@@ -194,19 +196,25 @@ sub adjust_altitude {
   $altitude = $max if $altitude > $max;
   $altitude = 0 if $altitude < 0;
   $altitude = 1 if $altitude == 0 and any { defined $self->altitudes->[$_] and $self->altitudes->[$_] > 1  } $self->neighbours($to);
+  if ($altitude > 7) {
+    my $direction = $self->direction($from, $to);
+    if ($direction == $self->slope or $direction == ($self->slope + 3) % 6) {
+      $delta = -1;
+    }
+  }
   $self->altitudes->[$to] = $altitude;
 }
 
 sub add_flow {
-  my ($self, $to) = @_;
-  my @neighbours = $self->all_neighbours($to);
+  my ($self, $to, $source) = @_;
+  my @neighbours = $self->neighbours($to);
   # don't do anything if there's already water flow
   return if defined $self->flows->[$to];
   # don't do anything if this is coastal or ocean
   return if defined $self->altitudes->[$to] and $self->altitudes->[$to] <= 1;
   # if this hex can be a source or water from a neighbour flows into it
-  if (not $self->tiles->[$to] and $self->altitudes->[$to] > 1 and $self->altitudes->[$to] < 9
-      or any { $self->flows->[$_] and $self->flows->[$_] == $to } @neighbours) {
+  if ($source and not $self->tiles->[$to] and $self->altitudes->[$to] > 1 and $self->altitudes->[$to] < 9
+      or any { defined $self->flows->[$_] and $self->flows->[$_] == $to } @neighbours) {
     # prefer a lower neighbour (or an undefined one), but "lower" works only for
     # known hexes so there must already be water flow, there, and that water
     # flow must not be circular
@@ -214,9 +222,14 @@ sub add_flow {
       not defined $self->altitudes->[$_]
           or $self->altitudes->[$_] < $self->altitudes->[$to]
           and $self->flowable($to, $_)
-    } shuffle @neighbours;
+    } @neighbours;
     if (@candidates) {
       $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
+      return;
+    }
+    # or if this hex is at the edge, prefer flowing off the edge of the map
+    if (@neighbours < 6) {
+      $self->flows->[$to] = -1;
       return;
     }
     # or prefer of equal altitude but again this works only for known hexes so
@@ -225,12 +238,19 @@ sub add_flow {
     @candidates = grep {
       $self->altitudes->[$_] == $self->altitudes->[$to]
           and $self->flowable($to, $_)
-    } shuffle @neighbours;
+    } @neighbours;
     if (@candidates) {
       $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
       return;
     }
-    # or dig a canyon? (flow through higher altitudes)
+    # or it's magic!!
+    @candidates = grep { $self->flowable($to, $_) } @neighbours;
+    if (@candidates) {
+      warn "Awkward transition at $to\n";
+      $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
+      return;
+    }
+    warn "Unfortunate end of flow at $to\n";
   }
 }
 
@@ -238,11 +258,13 @@ sub add_flow {
 # to A.
 sub flowable {
   my ($self, $from, $to) = @_;
-  while ($self->flows->[$to]) {
+  my $flow = 0;
+  while (defined $self->flows->[$to] and $self->flows->[$to] >= 0) {
     $to = $self->flows->[$to];
     return 0 if $to == $from;
+    $flow = 1;
   }
-  return 1;
+  return $flow;
 }
 
 # Of all the given neighbours, prefer one with a an existing river; or the one
@@ -259,6 +281,29 @@ sub pick_with_bias {
     }
   }
   return $neighbours[0];
+}
+
+sub add_rivers {
+  my ($self) = @_;
+  my %seen;
+  for my $coordinate (0 .. $self->rows * $self->cols - 1) {
+    next unless defined $self->flows->[$coordinate];
+    next if $seen{$coordinate};
+    $seen{$coordinate} = 1;
+    if (none {
+      defined $self->flows->[$_]
+          and $self->flows->[$_] == $coordinate
+        } $self->neighbours($coordinate)) {
+      my $river = [];
+      while (defined $coordinate) {
+        push(@$river, $coordinate);
+        last if $coordinate == -1;
+        $seen{$coordinate} = 1;
+        $coordinate = $self->flows->[$coordinate];
+      }
+      push(@{$self->rivers}, $river);
+    }
+  }
 }
 
 sub special {
@@ -278,19 +323,6 @@ sub neighbour {
     return $candidates[0] if @candidates;
   }
   return $neighbours[0];
-}
-
-# Returns the coordinates of neighbour regions, in random order, even if off the
-# map.
-sub all_neighbours {
-  my ($self, $coordinate) = @_;
-  my @offsets;
-  if ($coordinate % 2) {
-    @offsets = (-1, +1, $self->cols, -$self->cols, $self->cols -1, $self->cols +1);
-  } else {
-    @offsets = (-1, +1, $self->cols, -$self->cols, -$self->cols -1, -$self->cols +1);
-  }
-  return map { $coordinate + $_ } shuffle grep {$_} @offsets;
 }
 
 # Returns the coordinates of neighbour regions, in random order, but only if on
@@ -339,7 +371,7 @@ sub to_text {
     $text .= $self->xy($i) . " @tiles\n";
   }
   for my $river (@{$self->rivers}) {
-    $text .= $self->xy($river) . " river\n" if ref($river) and @$river > 1;
+    $text .= $self->xy(@$river) . " river\n" if ref($river) and @$river > 1;
   }
   for my $trail (@{$self->trails}) {
     $text .= $self->xy(@$trail) . " trails\n" if ref($trail) and @$trail > 1;
@@ -359,7 +391,29 @@ sub to_text {
 
 sub xy {
   my ($self, @coordinates) = @_;
-  return join("-", map { sprintf("%02d%02d", $_ % $self->cols + 1, int($_ / $self->cols) + 1) } @coordinates);
+  for (my $i = 0; $i < @coordinates; $i++) {
+    if ($coordinates[$i] == -1) {
+      $coordinates[$i] = $self->edge($coordinates[$i - 1]);
+    } else {
+      $coordinates[$i] = sprintf("%02d%02d", $coordinates[$i] % $self->cols + 1, int($coordinates[$i] / $self->cols) + 1);
+    }
+  }
+  return join("-", @coordinates);
+}
+
+sub edge {
+  my ($self, $coordinate) = @_;
+  my ($x, $y) = $coordinate =~ /(..)(..)/;
+  if ($x == 1) {
+    return "00" . $y;
+  } elsif ($x == $self->cols) {
+    return sprintf("%02d", $self->cols+1) . $y;
+  } elsif ($y == 1) {
+    return $x . "00";
+  } elsif ($y == $self->rows) {
+    return $x . sprintf("%02d", $self->rows+1);
+  }
+
 }
 
 1;
