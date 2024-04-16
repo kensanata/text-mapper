@@ -37,7 +37,7 @@ features such that no terrible geographical problems arise.
 package Game::TextMapper::Solo;
 use Game::TextMapper::Log;
 use Modern::Perl '2018';
-use List::Util qw(shuffle any none);
+use List::Util qw(shuffle all any none);
 use Mojo::Base -base;
 
 my $log = Game::TextMapper::Log->get;
@@ -109,7 +109,7 @@ sub random_walk {
   my $tile_count = 0;
   my $path_length = 1;
   my $max_tiles = $self->rows * $self->cols;
-  my $start = $self->rows / 2 * $self->cols + $self->cols / 2;
+  my $start = int($self->rows / 2) * $self->cols + int($self->cols / 2);
   $self->altitudes->[$start] = 5;
   my @neighbours = $self->neighbours($start);
   # initial river setup: roll a d6 four destination
@@ -120,8 +120,8 @@ sub random_walk {
   # initial setup: roll for starting region and the surrounding hexes
   for my $to ($start, @neighbours) {
     $seen{$to} = 1;
-    $self->random_tile($start, $to);
-    push(@{$self->tiles->[$to]}, qq("$tile_count/$to"));
+    $self->random_tile($start, $to, 'house');
+    push(@{$self->tiles->[$to]}, qq("$tile_count/$to")) if $log->level eq 'debug';
     $tile_count++;
   }
   # remember those walks for debugging (assign to trails, for example)
@@ -137,7 +137,7 @@ sub random_walk {
       if (not $seen{$to}) {
         $seen{$to} = 1;
         $self->random_tile($from, $to);
-        push(@{$self->tiles->[$to]}, qq("$tile_count/$to"));
+        push(@{$self->tiles->[$to]}, qq("$tile_count/$to")) if $log->level eq 'debug';
         $tile_count++;
       }
       $from = $to;
@@ -151,10 +151,11 @@ sub random_walk {
 }
 
 sub random_tile {
-  my ($self, $from, $to) = @_;
+  my ($self, $from, $to, $settlement) = @_;
   my $roll = roll_2d6();
   my $altitude = $self->adjust_altitude($roll, $from, $to);
-  $self->add_flow($to, ($roll >= 5 and $roll <= 8));
+  # coastal water always has flow
+  $self->add_flow($to, ($roll >= 5 and $roll <= 8 or $altitude == 1));
   my $wet = defined $self->flows->[$to];
   my $tile;
   if    ($altitude == 0) { $tile = 'ocean' }
@@ -169,15 +170,26 @@ sub random_tile {
   elsif ($altitude == 9) { $tile = special() ? 'volcano' : 'mountain' }
   else                   { $tile = 'ice' }
   push(@{$self->tiles->[$to]}, $tile);
-  push(@{$self->tiles->[$to]}, qq("+$altitude"));
+  if ($settlement) {
+    push(@{$self->tiles->[$to]}, $settlement);
+  } elsif ($roll == 7 and $wet and $altitude >= 2 and $altitude <= 7) {
+    push(@{$self->tiles->[$to]}, settlement());
+  }
+  $self->add_flow($to, ($roll >= 5 and $roll <= 8 or $altitude == 1));
+  push(@{$self->tiles->[$to]}, qq("+$altitude")) if $log->level eq 'debug';
 }
 
 sub adjust_altitude {
   my ($self, $roll, $from, $to) = @_;
+  my @neighbours = $self->neighbours($to);
+  # ocean stays ocean
+  if (all { defined $self->altitudes->[$_] and $self->altitudes->[$_] <= 1 } @neighbours) {
+    return $self->altitudes->[$to] = 0;
+  }
   my $altitude = $self->altitudes->[$from];
   my $max = 10;
   # if we're following a river, the altitude rarely goes up
-  for ($self->neighbours($to)) {
+  for (@neighbours) {
     if (defined $self->flows->[$_]
         and $self->flows->[$_] == $to
         and defined $self->altitudes->[$_]
@@ -188,21 +200,27 @@ sub adjust_altitude {
   my $delta = 0;
   if    ($roll ==  2) { $delta = -2 }
   elsif ($roll ==  3) { $delta = -1 }
-  elsif ($roll ==  4) { $delta = -1 }
   elsif ($roll == 10) { $delta = +1 }
   elsif ($roll == 11) { $delta = +1 }
   elsif ($roll == 12) { $delta = +2 }
-  $altitude += $delta;
-  $altitude = $max if $altitude > $max;
-  $altitude = 0 if $altitude < 0;
-  $altitude = 1 if $altitude == 0 and any { defined $self->altitudes->[$_] and $self->altitudes->[$_] > 1  } $self->neighbours($to);
-  if ($altitude > 7) {
+  elsif ($altitude > 7) {
+    # mountains go down unless for or against the slope
     my $direction = $self->direction($from, $to);
     if ($direction == $self->slope or $direction == ($self->slope + 3) % 6) {
       $delta = -1;
     }
+  } else {
+    # all territory goes down if in the direction of slope
+    my $direction = $self->direction($from, $to);
+    if ($direction == $self->slope) {
+      $delta = -1;
+    }
   }
-  $self->altitudes->[$to] = $altitude;
+  $altitude += $delta;
+  $altitude = $max if $altitude > $max;
+  $altitude = 0 if $altitude < 0;
+  $altitude = 1 if $altitude == 0 and any { defined $self->altitudes->[$_] and $self->altitudes->[$_] > 1  } @neighbours;
+  return $self->altitudes->[$to] = $altitude;
 }
 
 sub add_flow {
@@ -210,10 +228,10 @@ sub add_flow {
   my @neighbours = $self->neighbours($to);
   # don't do anything if there's already water flow
   return if defined $self->flows->[$to];
-  # don't do anything if this is coastal or ocean
-  return if defined $self->altitudes->[$to] and $self->altitudes->[$to] <= 1;
+  # don't do anything if this is ocean
+  return if defined $self->altitudes->[$to] and $self->altitudes->[$to] == 0;
   # if this hex can be a source or water from a neighbour flows into it
-  if ($source and not $self->tiles->[$to] and $self->altitudes->[$to] > 1 and $self->altitudes->[$to] < 9
+  if ($source and not $self->tiles->[$to] and $self->altitudes->[$to] >= 1 and $self->altitudes->[$to] <= 8
       or any { defined $self->flows->[$_] and $self->flows->[$_] == $to } @neighbours) {
     # prefer a lower neighbour (or an undefined one), but "lower" works only for
     # known hexes so there must already be water flow, there, and that water
@@ -246,11 +264,14 @@ sub add_flow {
     # or it's magic!!
     @candidates = grep { $self->flowable($to, $_) } @neighbours;
     if (@candidates) {
-      warn "Awkward transition at $to\n";
+      $log->info("Awkward transition at " . $self->xy($to));
       $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
       return;
     }
-    warn "Unfortunate end of flow at $to\n";
+    # Or it's a dead end… and entrance into the underworld, obviously
+    if ($self->altitudes->[$to] > 1) {
+      push(@{$self->tiles->[$to]}, 'cave');
+    }
   }
 }
 
@@ -288,6 +309,7 @@ sub add_rivers {
   my %seen;
   for my $coordinate (0 .. $self->rows * $self->cols - 1) {
     next unless defined $self->flows->[$coordinate];
+    next if $self->altitudes->[$coordinate] <= 1; # do not show rivers starting here
     next if $seen{$coordinate};
     $seen{$coordinate} = 1;
     if (none {
@@ -304,6 +326,10 @@ sub add_rivers {
       push(@{$self->rivers}, $river);
     }
   }
+}
+
+sub settlement {
+  return $settlements[int(rand($#settlements + 1))];
 }
 
 sub special {
@@ -367,7 +393,7 @@ sub to_text {
   for my $i (0 .. $self->rows * $self->cols - 1) {
     next unless $self->tiles->[$i];
     my @tiles = @{$self->tiles->[$i]};
-    push(@tiles, "arrow" . $self->direction($i, $self->flows->[$i])) if defined $self->flows->[$i];
+    push(@tiles, "arrow" . $self->direction($i, $self->flows->[$i])) if defined $self->flows->[$i] and $log->level eq 'debug';
     $text .= $self->xy($i) . " @tiles\n";
   }
   for my $river (@{$self->rivers}) {
