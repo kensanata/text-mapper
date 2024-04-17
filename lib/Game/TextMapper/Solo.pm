@@ -78,7 +78,8 @@ has 'loglevel';
 
 my @tiles = qw(plain rough swamp desert forest hills green-hills forest-hill mountains mountain volcano ice water coastal ocean);
 my @no_sources = qw(desert volcano water coastal ocean);
-my @settlements = qw(house ruin ruined-tower ruined-castle tower castle cave);
+my @settlements = qw(house ruin tower ruined-tower castle ruined-castle);
+my @ruins = qw(ruin ruined-tower ruined-castle);
 
 =head1 METHODS
 
@@ -172,8 +173,12 @@ sub random_tile {
   push(@{$self->tiles->[$to]}, $tile);
   if ($settlement) {
     push(@{$self->tiles->[$to]}, $settlement);
-  } elsif ($roll == 7 and $wet and $altitude >= 2 and $altitude <= 7) {
-    push(@{$self->tiles->[$to]}, settlement());
+  } elsif ($roll == 7) {
+    if ($tile eq 'forest' or $tile eq 'forest-hill') {
+      push(@{$self->tiles->[$to]}, $settlements[int(rand($#settlements + 1))]);
+    } elsif ($tile eq 'desert' or $tile eq 'swamp' or $tile eq 'green-hills') {
+      push(@{$self->tiles->[$to]}, $ruins[int(rand($#ruins + 1))]);
+    }
   }
   $self->add_flow($to, ($roll >= 5 and $roll <= 8 or $altitude == 1));
   push(@{$self->tiles->[$to]}, qq("+$altitude")) if $log->level eq 'debug';
@@ -326,10 +331,6 @@ sub add_rivers {
       push(@{$self->rivers}, $river);
     }
   }
-}
-
-sub settlement {
-  return $settlements[int(rand($#settlements + 1))];
 }
 
 sub special {
