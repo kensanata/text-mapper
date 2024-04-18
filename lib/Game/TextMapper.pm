@@ -318,17 +318,18 @@ get '/folkesten/random/text' => sub {
 
 get '/solo' => sub {
   my $c = shift;
+  my $mapper = Game::TextMapper::Solo->new($c->req->params->to_hash);
   if ($c->stash('format')||'' eq 'txt') {
-    $c->render(text => Game::TextMapper::Solo->new->generate_map());
+    $c->render(text => $mapper->generate_map());
   } else {
-    $c->render(template => 'edit',
-	       map => Game::TextMapper::Solo->new->generate_map());
+    $c->render(template => 'edit', map => $mapper->generate_map());
   }
 };
 
 get '/solo/random' => sub {
   my $c = shift;
-  my $map = Game::TextMapper::Solo->new->generate_map();
+  my $mapper = Game::TextMapper::Solo->new($c->req->params->to_hash);
+  my $map = $mapper->generate_map();
   my $svg = Game::TextMapper::Mapper::Hex->new(dist_dir => $dist_dir)
       ->initialize($map)
       ->svg();
@@ -337,7 +338,8 @@ get '/solo/random' => sub {
 
 get '/solo/random/text' => sub {
   my $c = shift;
-  my $text = Game::TextMapper::Solo->new->generate_map();
+  my $mapper = Game::TextMapper::Solo->new($c->req->params->to_hash);
+  my $text = $mapper->generate_map();
   $c->render(text => $text, format => 'txt');
 };
 
@@ -1659,6 +1661,20 @@ Or just keep reloading <%= link_to url_for('folkestenrandom') => begin %>this li
 
 <p><%= link_to url_for('solo') => begin %>Solo<% end %> generates a map based on a semi-random walk by a party through the wilderness, exploring as it goes.
 Or just keep reloading <%= link_to url_for('solorandom') => begin %>this link<% end %>.
+
+%= form_for solo => begin
+<table>
+<tr><td>Rows:</td><td>
+%= number_field rows => 20, min => 5, max => 99
+</td>
+</tr><tr>
+<td>Columns:</td><td>
+%= number_field cols => 30, min => 5, max => 99
+</td></tr></table>
+<p>
+%= submit_button "Generate Map Data"
+</p>
+% end
 
 <hr>
 

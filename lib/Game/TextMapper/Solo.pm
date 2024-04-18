@@ -46,7 +46,7 @@ my $log = Game::TextMapper::Log->get;
 
 =head2 rows
 
-The height of the map, defaults to 10.
+The height of the map, defaults to 15.
 
     use Modern::Perl;
     use Game::TextMapper::Solo;
@@ -56,24 +56,23 @@ The height of the map, defaults to 10.
 
 =head2 cols
 
-The width of the map, defaults to 20.
+The width of the map, defaults to 30.
 
     use Modern::Perl;
     use Game::TextMapper::Solo;
-    my $map = Game::TextMapper::Solo->new(cols => 30)
+    my $map = Game::TextMapper::Solo->new(cols => 40)
         ->generate_map;
     print $map;
 
 =cut
 
 has 'rows' => 15;
-has 'cols' => 20;
+has 'cols' => 30;
 has 'altitudes' => sub{[]}; # these are the altitudes of each hex, a number between 0 (deep ocean) and 10 (ice)
 has 'tiles' => sub{[]}; # these are the tiles on the map, an array of arrays of strings
 has 'flows' => sub{[]}; # these are the water flow directions on the map, an array of coordinates
 has 'rivers' => sub{[]}; # for rendering, the flows are turned into rivers, an array of arrays of coordinates
 has 'trails' => sub{[]};
-has 'slope'; # preferred river direction
 has 'loglevel';
 
 my @tiles = qw(plain rough swamp desert forest hills green-hills forest-hill mountains mountain volcano ice water coastal ocean);
@@ -93,7 +92,6 @@ attributes.
 sub generate_map {
   my ($self) = @_;
   $log->level($self->loglevel) if $self->loglevel;
-  $self->slope(int(rand(6)));
   $self->random_walk();
   # my $walks = $self->random_walk();
   # debug random walks
@@ -180,7 +178,6 @@ sub random_tile {
       push(@{$self->tiles->[$to]}, $ruins[int(rand($#ruins + 1))]);
     }
   }
-  $self->add_flow($to, ($roll >= 5 and $roll <= 8 or $altitude == 1));
   push(@{$self->tiles->[$to]}, qq("+$altitude")) if $log->level eq 'debug';
 }
 
@@ -193,7 +190,8 @@ sub adjust_altitude {
   }
   my $altitude = $self->altitudes->[$from];
   my $max = 10;
-  # if we're following a river, the altitude rarely goes up
+  # if we're following a river, the altitude rarely goes up; neighbouring hexes
+  # also limit the heigh changes
   for (@neighbours) {
     if (defined $self->flows->[$_]
         and $self->flows->[$_] == $to
@@ -208,19 +206,6 @@ sub adjust_altitude {
   elsif ($roll == 10) { $delta = +1 }
   elsif ($roll == 11) { $delta = +1 }
   elsif ($roll == 12) { $delta = +2 }
-  elsif ($altitude > 7) {
-    # mountains go down unless for or against the slope
-    my $direction = $self->direction($from, $to);
-    if ($direction == $self->slope or $direction == ($self->slope + 3) % 6) {
-      $delta = -1;
-    }
-  } else {
-    # all territory goes down if in the direction of slope
-    my $direction = $self->direction($from, $to);
-    if ($direction == $self->slope) {
-      $delta = -1;
-    }
-  }
   $altitude += $delta;
   $altitude = $max if $altitude > $max;
   $altitude = 0 if $altitude < 0;
@@ -247,7 +232,7 @@ sub add_flow {
           and $self->flowable($to, $_)
     } @neighbours;
     if (@candidates) {
-      $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
+      $self->flows->[$to] = $candidates[0];
       return;
     }
     # or if this hex is at the edge, prefer flowing off the edge of the map
@@ -263,14 +248,14 @@ sub add_flow {
           and $self->flowable($to, $_)
     } @neighbours;
     if (@candidates) {
-      $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
+      $self->flows->[$to] = $candidates[0];
       return;
     }
     # or it's magic!!
     @candidates = grep { $self->flowable($to, $_) } @neighbours;
     if (@candidates) {
       $log->info("Awkward transition at " . $self->xy($to));
-      $self->flows->[$to] = $self->pick_with_bias($to, @candidates);
+      $self->flows->[$to] = $candidates[0];
       return;
     }
     # Or it's a dead end… and entrance into the underworld, obviously
@@ -291,22 +276,6 @@ sub flowable {
     $flow = 1;
   }
   return $flow;
-}
-
-# Of all the given neighbours, prefer one with a an existing river; or the one
-# in the slope direction; otherwise return the first one. This assumes that they
-# are already shuffled.
-sub pick_with_bias {
-  my ($self, $from, @neighbours) = @_;
-  for my $to (@neighbours) {
-    my $direction = $self->direction($from, $to);
-    if ($direction == $self->slope
-        or ($direction + 1) % 6 == $self->slope
-        or ($direction - 1) % 6 == $self->slope) {
-      return $to;
-    }
-  }
-  return $neighbours[0];
 }
 
 sub add_rivers {
