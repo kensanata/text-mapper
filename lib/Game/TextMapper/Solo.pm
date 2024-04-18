@@ -116,10 +116,15 @@ sub random_walk {
   # roll a d6 for source, skip if same as destination
   my $source = $neighbours[int(rand(6))];
   $self->flows->[$source] = $start unless $source == $self->flows->[$start];
-  # initial setup: roll for starting region and the surrounding hexes
-  for my $to ($start, @neighbours) {
+  # initial setup: roll for starting region with a village
+  $seen{$start} = 1;
+  $self->random_tile($start, $start, 'house');
+  push(@{$self->tiles->[$start]}, qq("$tile_count/$start")) if $log->level eq 'debug';
+  $tile_count++;
+  # roll for the immediate neighbours
+  for my $to (@neighbours) {
     $seen{$to} = 1;
-    $self->random_tile($start, $to, 'house');
+    $self->random_tile($start, $to);
     push(@{$self->tiles->[$to]}, qq("$tile_count/$to")) if $log->level eq 'debug';
     $tile_count++;
   }
