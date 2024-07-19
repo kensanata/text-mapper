@@ -53,6 +53,7 @@ use File::Slurper qw(read_text);
 use Encode qw(encode_utf8 decode_utf8);
 use Mojo::Util qw(url_escape);
 use File::ShareDir 'dist_dir';
+use Scalar::Util 'weaken';
 
 =head1 ATTRIBUTES
 
@@ -134,6 +135,7 @@ sub process {
   foreach (@_) {
     if (/^(-?\d\d)(-?\d\d)(\d\d)?\s+(.*)/ or /^(-?\d\d+)\.(-?\d\d+)(?:\.(\d\d+))?\s+(.*)/) {
       my $region = $self->make_region(x => $1, y => $2, z => $3||'00', map => $self);
+      weaken($region->{map});
       my $rest = $4;
       while (my ($tag, $label, $size) = $rest =~ /\b([a-z]+)=["“]([^"”]+)["”]\s*(\d+)?/) {
 	if ($tag eq 'name') {
@@ -162,6 +164,7 @@ sub process {
     } elsif (/^(-?\d\d-?\d\d(?:\d\d)?(?:--?\d\d-?\d\d(?:\d\d)?)+)\s+(\S+)\s*(?:["“](.+)["”])?\s*(left|right)?\s*(\d+%)?/
              or /^(-?\d\d+\.-?\d\d+(?:\.\d\d+)?(?:--?\d\d+\.-?\d\d+(?:\.\d\d+)?)+)\s+(\S+)\s*(?:["“](.+)["”])?\s*(left|right)?\s*(\d+%)?/) {
       my $line = $self->make_line(map => $self);
+      weaken($line->{map});
       my $str = $1;
       $line->type($2);
       $line->label($3);
@@ -259,6 +262,7 @@ sub svg_other {
     }
     $data .= "\n";
   }
+  $self->other(undef);
   return $data;
 }
 
