@@ -16,7 +16,7 @@
 
 package Game::TextMapper;
 
-our $VERSION = 1.05;
+our $VERSION = 1.08;
 
 use Game::TextMapper::Log;
 use Game::TextMapper::Point;

@@ -32,8 +32,8 @@ README.md
 script/text-mapper
 share/apocalypse.txt
 share/black-and-white.txt
-share/bright.txt
 share/bright-example.txt
+share/bright.txt
 share/default.txt
 share/extract-svg.pl
 share/forgotten-depths.txt
