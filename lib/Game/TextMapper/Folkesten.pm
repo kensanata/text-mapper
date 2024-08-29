@@ -321,7 +321,7 @@ sub generate_rivers {
         push(@$river, $end);
         last;
       }
-      $log->trace(" neighbours: " . join(", ", map { "$_: " . $self->world->{$_} } @neighbours));
+      # $log->debug(" neighbours: " . join(", ", map { "$_: " . $self->world->{$_} } @neighbours));
       @neighbours = sort { $self->altitude->{$self->world->{$a}} <=> $self->altitude->{$self->world->{$b}} } @neighbours;
       my $next = shift(@neighbours);
       if ($seen{$next}) {
