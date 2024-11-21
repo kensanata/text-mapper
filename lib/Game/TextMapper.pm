@@ -1084,17 +1084,6 @@ L<https://campaignwiki.org/contrib/bright.txt>
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+bright-example.txt>
 
-=head3 Dungeons library
-
-Example:
-L<https://campaignwiki.org/contrib/gridmapper-example.txt>
-
-Library:
-L<https://campaignwiki.org/contrib/gridmapper.txt>
-
-Result:
-L<https://campaignwiki.org/text-mapper?type=square&map=include+gridmapper-example.txt>
-
 =head3 Gazetteer library
 
 Example data:
@@ -1116,6 +1105,17 @@ L<https://campaignwiki.org/contrib/gnomeyland.txt>
 
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+gnomeyland-example.txt>
+
+=head3 Gridmapper library
+
+Example:
+L<https://campaignwiki.org/contrib/gridmapper-example.txt>
+
+Library:
+L<https://campaignwiki.org/contrib/gridmapper.txt>
+
+Result:
+L<https://campaignwiki.org/text-mapper?type=square&map=include+gridmapper-example.txt>
 
 =head3 Traveller library
 
