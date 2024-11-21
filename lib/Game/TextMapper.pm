@@ -1062,6 +1062,17 @@ L<https://campaignwiki.org/contrib/default.txt>
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+forgotten-depths.txt>
 
+=head3 Apocalypse library
+
+Example data:
+L<https://campaignwiki.org/contrib/apocalypse-example.txt>
+
+Library:
+L<https://campaignwiki.org/contrib/apocalypse.txt>
+
+Result:
+L<https://campaignwiki.org/text-mapper?map=include+apocalypse-example.txt>
+
 =head3 Bright library
 
 Example data:
@@ -1072,6 +1083,17 @@ L<https://campaignwiki.org/contrib/bright.txt>
 
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+bright-example.txt>
+
+=head3 Dungeons library
+
+Example:
+L<https://campaignwiki.org/contrib/gridmapper-example.txt>
+
+Library:
+L<https://campaignwiki.org/contrib/gridmapper.txt>
+
+Result:
+L<https://campaignwiki.org/text-mapper?type=square&map=include+gridmapper-example.txt>
 
 =head3 Gazetteer library
 
@@ -1105,17 +1127,6 @@ L<https://campaignwiki.org/contrib/traveller.txt>
 
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+traveller-example.txt>
-
-=head3 Dungeons library
-
-Example:
-L<https://campaignwiki.org/contrib/gridmapper-example.txt>
-
-Library:
-L<https://campaignwiki.org/contrib/gridmapper.txt>
-
-Result:
-L<https://campaignwiki.org/text-mapper?type=square&map=include+gridmapper-example.txt>
 
 =head2 Large Areas
 
@@ -1301,8 +1312,8 @@ The Apocalypse algorithm was developed by Alex Schroeder. See L<Hex describing t
 post-apocalypse|https://alexschroeder.ch/wiki/2020-10-02_Hex_describing_the_post-apocalypse>
 for more information.
 
-The output uses the default library. This library is dedicated to the public.
-domain.
+The output uses the I<Apocalypse> library. This library is dedicated to the
+public domain.
 
 See L<Game::TextMapper::Schroeder::Alpine> for more information.
 
@@ -1313,8 +1324,8 @@ geomorph sketches by Robin Green. See L<The Nine Forms of the Five Room
 Dungeon|https://gnomestew.com/the-nine-forms-of-the-five-room-dungeon/> by
 Matthew J. Neagley for more information.
 
-The output uses the Dungeons library. This library is dedicated to the public
-domain.
+The output uses the I<Gridmapper> library. This library is dedicated to the
+public domain.
 
 See L<Game::TextMapper::Gridmapper> for more information.
 
