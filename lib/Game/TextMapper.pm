@@ -1,19 +1,5 @@
 #!/usr/bin/env perl
-# Copyright (C) 2009-2023  Alex Schroeder <alex@gnu.org>
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU Affero General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your option) any
-# later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
-# details.
-#
-# You should have received a copy of the GNU Affero General Public License along
-# with this program. If not, see <http://www.gnu.org/licenses/>.
-
+# License: AGPL 3 (see below)
 package Game::TextMapper;
 
 our $VERSION = 1.08;
@@ -697,6 +683,66 @@ Game::TextMapper - a web app to generate maps based on text files
 The script parses a text description of a hex map and produces SVG output. Use
 your browser to view SVG files and use Inkscape to edit them.
 
+=over
+
+=item * L<Tutorial|/Tutorial>
+
+=item * L<Colours and Transparency|/Colours and Transparency>
+
+=item * L<Include a Library|/Include a Library>
+
+=over
+
+=item * L<The default library|/The default library>
+
+=item * L<Bright library|/Bright library>
+
+=item * L<Gazetteer library|/Gazetteer library>
+
+=item * L<Gnomeyland library|/Gnomeyland library>
+
+=item * L<Traveller library|/Traveller library>
+
+=item * L<Dungeons library|/Dungeons library>
+
+=back
+
+=item * L<Large Areas|/Large Areas>
+
+=item * L<SVG|/SVG>
+
+=item * L<Other|/Other>
+
+=item * L<URL|/URL>
+
+=item * L<License|/License>
+
+=item * L<Algorithms|/Algorithms>
+
+=over
+
+=item * L<Smale|/Smale>
+
+=item * L<Alpine|/Alpine>
+
+=item * L<Apocalypse|/Apocalypse>
+
+=item * L<Gridmapper|/Gridmapper>
+
+=item * L<Islands|/Islands>
+
+=item * L<Traveller|/Traveller>
+
+=back
+
+=item * L<Border Adjustments|/Border Adjustments>
+
+=item * L<Configuration|/Configuration>
+
+=item * L<Command Line|/Command Line>
+
+=back
+
 =head2 Tutorial
 
 Note that if you look at the help page
@@ -1027,6 +1073,17 @@ L<https://campaignwiki.org/contrib/bright.txt>
 Result:
 L<https://campaignwiki.org/text-mapper?map=include+bright-example.txt>
 
+=head3 Gazetteer library
+
+Example data:
+L<https://campaignwiki.org/contrib/gazetteer-example.txt>
+
+Library:
+L<https://campaignwiki.org/contrib/gazetteer.txt>
+
+Result:
+L<https://campaignwiki.org/text-mapper?map=include+gazetteer-example.txt>
+
 =head3 Gnomeyland library
 
 Example data:
@@ -1140,7 +1197,7 @@ C<%s> in the URL and then this placeholder will be replaced with the
 
 =head2 License
 
-This program is copyright (C) 2007-2019 Alex Schroeder <alex@gnu.org>.
+This program is copyright (C) 2007-2024 Alex Schroeder <alex@gnu.org>.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -1153,15 +1210,25 @@ FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
 details.
 
 You should have received a copy of the GNU Affero General Public License along
-with this program. If not, see <http://www.gnu.org/licenses/>.
+with this program. If not, see L<http://www.gnu.org/licenses/>.
 
 The maps produced by the program are obviously copyrighted by I<you>,
 the author. If you're using SVG icons, these I<may> have a separate
-license. Thus, if you produce a map using the I<Gnomeyland> icons by
-Gregory B. MacKenzie, the map is automatically licensed under the
-Creative Commons Attribution-ShareAlike 3.0 Unported License. To view
-a copy of this license, visit
-L<http://creativecommons.org/licenses/by-sa/3.0/>.
+license.
+
+=over
+
+=item * If you produce a map using the I<Gazetteer> icons by Thorfinn Tait, the
+map is automatically licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy
+of this license, visit L<https://creativecommons.org/licenses/by-nc-sa/4.0/>.
+
+=item * If you produce a map using the I<Gnomeyland> icons by Gregory B.
+MacKenzie, the map is automatically licensed under the Creative Commons
+Attribution-ShareAlike 3.0 Unported License. To view a copy of this license,
+visit L<https://creativecommons.org/licenses/by-sa/3.0/>.
+
+=back
 
 You can add arbitrary SVG using the B<license> keyword (without a
 tile). This is what the Gnomeyland library does, for example.
@@ -1192,6 +1259,10 @@ The viewport for the map is determined by the hexes of the map. You need to take
 this into account when putting a license onto the map. Thus, if your map does
 not include the hex 0101, you can't use coordinates for the license text around
 the origin at (0,0) – you'll have to move it around.
+
+=head2 Algorithms
+
+Text Mapper implements a number of different algorithms.
 
 =head3 Smale
 
