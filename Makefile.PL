@@ -58,6 +58,8 @@ run:
 
 upload:
 	rsync --archive --itemize-changes share/*.txt sibirocobombus:campaignwiki.org/contrib
+	ssh sibirocobombus make text-mapper
+	ssh sibirocobombus.root systemctl restart text-mapper
 EOT
   return join "\n", @ret;
 }
