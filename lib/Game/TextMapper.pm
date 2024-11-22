@@ -701,9 +701,9 @@ your browser to view SVG files and use Inkscape to edit them.
 
 =item * L<Gnomeyland library|/Gnomeyland library>
 
-=item * L<Traveller library|/Traveller library>
+=item * L<Gridmapper library|/Gridmapper library>
 
-=item * L<Dungeons library|/Dungeons library>
+=item * L<Traveller library|/Traveller library>
 
 =back
 
