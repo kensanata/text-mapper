@@ -177,6 +177,36 @@ sub process {
       }
       $line->points(\@points);
       push(@{$self->lines}, $line);
+    } elsif (my ($name, $x, $y, $starport, $size, $atmosphere, $hydrographic, $population, $government, $law, $tech, $bases, $rest) =
+        /(?:([^>\r\n\t]*?)\s+)?(\d\d)(\d\d)\s+([A-EX])([\dA])([\dA-F])([\dA])([\dA-C])([\dA-F])([\dA-L])-(\d{1,2}|[\dA-HJ-NP-Z])(?:\s+([PCTRNSG ]+)\b)?(.*)/) {
+      my $region = $self->make_region(x => $x, y => $y, z => '00', map => $self);
+      weaken($region->{map});
+      my @types;
+      push(@types, "starport-$starport") if $starport;
+      push(@types, "consulate") if $bases =~ /C/;
+      push(@types, "tas") if $bases =~ /T/;
+      push(@types, "pirate") if $bases =~ /P/;
+      push(@types, "research") if $bases =~ /R/;
+      push(@types, "naval") if $bases =~ /N/;
+      push(@types, "gas") if $bases =~ /G/;
+      push(@types, "scout") if $bases =~ /S/;
+      push(@types, "size-$size");
+      push(@types, "atmosphere-$atmosphere");
+      push(@types, "hydrosphere-$hydrographic");
+      push(@types, "population-$population");
+      push(@types, "government-$government");
+      push(@types, "law-$law");
+      push(@types, "tech-$tech");
+      my @tokens = split(' ', $rest);
+      my %map = (A => "amber", R => "red");
+      my ($travelzone) = grep /^([AR])$/, @tokens; # amber or red travel zone
+      push(@types, $map{$travelzone}) if $travelzone;
+      push(@types, grep(/^[A-Z][A-Za-z]$/, @tokens));
+      $region->type(\@types);
+      $region->label($name);
+      $region->size($size);
+      push(@{$self->regions}, $region);
+      push(@{$self->things}, $region);
     } elsif (/^(\S+)\s+attributes\s+(.*)/) {
       $self->attributes->{$1} = $2;
     } elsif (/^(\S+)\s+lib\s+(.*)/) {
