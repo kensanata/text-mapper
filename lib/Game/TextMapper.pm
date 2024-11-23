@@ -711,6 +711,8 @@ your browser to view SVG files and use Inkscape to edit them.
 
 =item * L<SVG|/SVG>
 
+=item * L<Deprecated|/Deprecated>
+
 =item * L<Other|/Other>
 
 =item * L<URL|/URL>
@@ -1158,11 +1160,29 @@ then we drop a jungle on top of the green area.
 
 You can define shapes using arbitrary SVG. Your SVG will end up in the
 B<defs> section of the SVG output. You can then refer to the B<id>
-attribute in your map definition. For the moment, all your SVG needs to
-fit on a single line.
+attribute in your map definition. Tag must start at the beginning of the
+line for it to get used.
 
-    <circle id="thorp" fill="#ffd700" stroke="black" stroke-width="7" cx="0" cy="0" r="15"/>
-    0101 thorp
+This works:
+
+    <circle id="settlement" fill="#ffd700" stroke="black" stroke-width="7" cx="0" cy="0" r="15"/>
+    0101 settlement
+
+This does not:
+
+    <circle id="settlement"
+            fill="#ffd700" stroke="black" stroke-width="7"
+            cx="0" cy="0" r="15"/>
+    0101 settlement
+
+Spreading an element and its children over multiple lines works as long as the
+the tags all start at the beginning of the line:
+
+    <g id="village" transform="scale(0.6), translate(0,40)">
+    <path stroke="black" stroke-width="7" d="M-15,0 v-50 m-15,0 h60 m-15,0 v50 M0,0 v-37"/>
+    <circle fill="#ffd700" stroke="black" stroke-width="7" cx="0" cy="0" r="15"/>
+    </g>
+    0101 village
 
 Shapes can include each other:
 
@@ -1177,6 +1197,26 @@ When creating new shapes, remember the dimensions of the hex. Your shapes must
 be centered around (0,0). The width of the hex is 200px, the height of the hex
 is 100 √3 = 173.2px. A good starting point would be to keep it within (-50,-50)
 and (50,50).
+
+=head2 Deprecated
+
+A deprecated alternative to using SVG directly is the C<xml> keywod. This is how
+it looks:
+
+    settlement xml <circle id="settlement" fill="#ffd700" stroke="black" stroke-width="7" cx="0" cy="0" r="15"/>
+    house xml <path stroke="black" stroke-width="7" d="M-15,0 v-50 m-15,0 h60 m-15,0 v50 M0,0 v-37"/>
+    village xml <use xlink:href="#house" transform="scale(0.6), translate(0,40)"/><use xlink:href="#settlement" transform="scale(0.6), translate(0,40)"/>
+    0101 village
+
+This above is the equivalent to the following:
+
+    <g id="house"><path stroke="black" stroke-width="7" d="M-15,0 v-50 m-15,0 h60 m-15,0 v50 M0,0 v-37"/></g>
+    <g id="settlement"><circle id="settlement" fill="#ffd700" stroke="black" stroke-width="7" cx="0" cy="0" r="15"/></g>
+    <g id="village"><use xlink:href="#house" transform="scale(0.6), translate(0,40)"/><use xlink:href="#settlement" transform="scale(0.6), translate(0,40)"/></g>
+    0101 village
+
+Since you have no control over the group element that wraps the XML provided,
+using SVG directly is preferred.
 
 =head2 Other
 
