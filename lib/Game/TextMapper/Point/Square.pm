@@ -110,7 +110,7 @@ sub svg_label {
   }
   $url =~ s/\%s/url_escape(encode_utf8($self->label))/e or $url .= url_escape(encode_utf8($self->label)) if $url;
   my $data = "    <g>";
-  sprintf('<text text-anchor="middle" x="%.1f" y="%.1f" %s %s>%s</text>',
+  $data .= sprintf('<text text-anchor="middle" x="%.1f" y="%.1f" %s %s>%s</text>',
           $self->pixels($offset, 0, 0.4 * $dy),
           $attributes ||'',
           $self->map->glow_attributes,
