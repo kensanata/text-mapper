@@ -851,7 +851,9 @@ The mid point between two hexes would therefore be a translation of
 
 You can define SVG B<path> elements to use for your map. These can be
 independent of a type (such as an icon for a settlement) or they can
-be part of a type (such as a bit of grass).
+be part of a type (such as a bit of grass). Take a look at various
+path editors like L<SvgPathEditor|https://yqnn.github.io/svg-path-editor/>
+if you need more complex shapes.
 
 Here, we add a bit of grass to the appropriate hex type:
 
